@@ -15,7 +15,6 @@ import (
 var (
 	h bool
 
-	GUIMode    bool
 	FyneMode   bool
 	ServerMode bool
 
@@ -29,8 +28,7 @@ var (
 
 func init() {
 	flag.BoolVar(&h, "h", false, "This help")
-	flag.BoolVar(&GUIMode, "g", true, "Play specific game in GUI mode")
-	flag.BoolVar(&FyneMode, "G", false, "Play specific game in Fyne GUI mode")
+	flag.BoolVar(&FyneMode, "G", true, "Play specific game in Fyne GUI mode")
 	flag.BoolVar(&ServerMode, "s", false, "Start a cloud-gaming server")
 	flag.BoolVar(&SoundOn, "m", true, "Turn on sound in GUI mode")
 	flag.BoolVar(&Debug, "d", false, "Use Debugger in GUI mode")
@@ -103,10 +101,6 @@ func main() {
 
 	if FyneMode {
 		driver := new(fyne.LCD)
-		startGUI(driver, driver)
-		return
-	} else if GUIMode {
-		driver := new(driver.LCD)
 		startGUI(driver, driver)
 		return
 	}

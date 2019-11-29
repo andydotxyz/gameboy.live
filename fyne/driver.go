@@ -157,8 +157,10 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 
 	win.SetPadded(false)
 	win.SetContent(content)
-	win.Canvas().(desktop.Canvas).SetOnKeyDown(lcd.buttonDown)
-	win.Canvas().(desktop.Canvas).SetOnKeyUp(lcd.buttonUp)
+	if deskCanvas, ok := win.Canvas().(desktop.Canvas); ok {
+		deskCanvas.SetOnKeyDown(lcd.buttonDown)
+		deskCanvas.SetOnKeyUp(lcd.buttonUp)
+	}
 	win.SetOnClosed(func() {
 		onQuit()
 		a.Quit()
