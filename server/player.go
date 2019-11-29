@@ -6,8 +6,8 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/HFO4/gbc-in-cloud/driver"
-	"github.com/HFO4/gbc-in-cloud/gb"
+	"github.com/andydotxyz/fynegameboy/driver"
+	"github.com/andydotxyz/fynegameboy/gb"
 	"github.com/logrusorgru/aurora"
 )
 

@@ -9,7 +9,7 @@ import (
 	"fyne.io/fyne/canvas"
 	"fyne.io/fyne/driver/desktop"
 
-	"github.com/HFO4/gbc-in-cloud/util"
+	"github.com/andydotxyz/fynegameboy/util"
 )
 
 type LCD struct {

@@ -1,4 +1,4 @@
-module github.com/HFO4/gbc-in-cloud
+module github.com/andydotxyz/fynegameboy
 
 go 1.12
 

@@ -1,7 +1,7 @@
 package gb
 
 import (
-	"github.com/HFO4/gbc-in-cloud/util"
+	"github.com/andydotxyz/fynegameboy/util"
 )
 
 /**
