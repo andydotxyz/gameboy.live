@@ -124,6 +124,10 @@ func (lcd *LCD) buttonUp(ev *fyne.KeyEvent) {
 }
 
 func (lcd *LCD) MinSize([]fyne.CanvasObject) fyne.Size {
+	if fyne.CurrentDevice().IsMobile() {
+		return fyne.NewSize(520, 800)
+	}
+
 	return fyne.NewSize(520, 400)
 }
 
@@ -132,6 +136,9 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 
 	xScale := float32(size.Width) / 520.0
 	yScale := float32(size.Height) / 400.0
+	if fyne.CurrentDevice().IsMobile() {
+		yScale = float32(size.Height) / 2 / 400.0
+	}
 
 	lcd.output.Resize(fyne.NewSize(int(320*xScale), int(296*yScale)))
 	lcd.output.Move(fyne.NewPos(int(100*xScale), int(54*yScale)))
@@ -153,7 +160,11 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 		}
 	}()
 
-	lcd.frame = canvas.NewImageFromResource(resourceFrameSvg)
+	if a.Driver().Device().IsMobile() {
+		lcd.frame = canvas.NewImageFromResource(resourceFramemobileSvg)
+	} else {
+		lcd.frame = canvas.NewImageFromResource(resourceFrameSvg)
+	}
 	content := fyne.NewContainerWithLayout(lcd, lcd.output, lcd.frame)
 
 	win.SetPadded(false)
