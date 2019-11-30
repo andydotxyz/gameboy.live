@@ -139,6 +139,7 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 
 func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 	a := app.New()
+	a.SetIcon(resourceIconPng)
 	win := a.NewWindow(fmt.Sprintf("GameBoy - %s", lcd.title))
 
 	lcd.screen = image.NewRGBA(image.Rect(0, 0, 160, 144))

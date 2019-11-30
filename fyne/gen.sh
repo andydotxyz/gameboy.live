@@ -1,5 +1,6 @@
 #!/bin/sh
 
 cd `dirname $0`
-fyne bundle -package fyne frame.svg > bunded.go
+fyne bundle -package fyne frame.svg > bundled.go
+fyne bundle -append ../Icon.png >> bundled.go
 
