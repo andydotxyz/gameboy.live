@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"log"
+
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
 	"fyne.io/fyne/canvas"
@@ -17,6 +18,9 @@ type LCD struct {
 	screen *image.RGBA
 
 	frame, output fyne.CanvasObject
+
+	up, down, left, right fyne.CanvasObject
+	start, sel, a, b      fyne.CanvasObject
 
 	inputStatus *byte
 	interrupt   bool
@@ -82,9 +86,9 @@ func (lcd *LCD) draw(w, h int) image.Image {
 // Reference :https://github.com/Humpheh/goboy/blob/master/pkg/gbio/iopixel/pixels.go
 var keyMap = map[fyne.KeyName]byte{
 	// A button
-	fyne.KeyZ: 5,
-	// B button
 	fyne.KeyX: 4,
+	// B button
+	fyne.KeyZ: 5,
 	// SELECT button
 	fyne.KeyBackspace: 6,
 	// START button
@@ -99,28 +103,34 @@ var keyMap = map[fyne.KeyName]byte{
 	fyne.KeyDown: 3,
 }
 
-func (lcd *LCD) buttonDown(ev *fyne.KeyEvent) {
+func (lcd *LCD) downCode(num uint) {
+	statusCopy := *lcd.inputStatus
 
-	var statusCopy byte
-	statusCopy = *lcd.inputStatus
+	statusCopy = util.ClearBit(statusCopy, num)
+	lcd.interrupt = true
+
+	*lcd.inputStatus = statusCopy
+}
+
+func (lcd *LCD) buttonDown(ev *fyne.KeyEvent) {
 	if offset, ok := keyMap[ev.Name]; ok {
-		statusCopy = util.ClearBit(statusCopy, uint(offset))
-		lcd.interrupt = true
+		lcd.downCode(uint(offset))
 	}
+}
+
+func (lcd *LCD) upCode(num uint) {
+	statusCopy := *lcd.inputStatus
+
+	statusCopy = util.SetBit(statusCopy, num)
+	lcd.interrupt = true
 
 	*lcd.inputStatus = statusCopy
 }
 
 func (lcd *LCD) buttonUp(ev *fyne.KeyEvent) {
-
-	var statusCopy byte
-	statusCopy = *lcd.inputStatus
 	if offset, ok := keyMap[ev.Name]; ok {
-		statusCopy = util.SetBit(statusCopy, uint(offset))
-		lcd.interrupt = true
+		lcd.upCode(uint(offset))
 	}
-
-	*lcd.inputStatus = statusCopy
 }
 
 func (lcd *LCD) MinSize([]fyne.CanvasObject) fyne.Size {
@@ -139,6 +149,29 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 	if fyne.CurrentDevice().IsMobile() {
 		yScale = float32(size.Height) / 2 / 400.0
 	}
+
+	abSize := fyne.NewSize(int(70*xScale), int(70*yScale))
+	lcd.a.Resize(abSize)
+	lcd.a.Move(fyne.NewPos(int(425*xScale), int(516*yScale)))
+	lcd.b.Resize(abSize)
+	lcd.b.Move(fyne.NewPos(int(328*xScale), int(565*yScale)))
+
+	startSize := fyne.NewSize(int(90*xScale), int(20*yScale))
+	lcd.start.Resize(startSize)
+	lcd.start.Move(fyne.NewPos(int(230*xScale), int(725*yScale)))
+	lcd.sel.Resize(startSize)
+	lcd.sel.Move(fyne.NewPos(int(135*xScale), int(725*yScale)))
+
+	dSize := fyne.NewSize(int(50*xScale), int(50*yScale))
+	lcd.up.Resize(dSize)
+	lcd.down.Resize(dSize)
+	lcd.left.Resize(dSize)
+	lcd.right.Resize(dSize)
+
+	lcd.up.Move(fyne.NewPos(int(68*xScale), int(505*yScale)))
+	lcd.down.Move(fyne.NewPos(int(68*xScale), int(605*yScale)))
+	lcd.left.Move(fyne.NewPos(int(18*xScale), int(555*yScale)))
+	lcd.right.Move(fyne.NewPos(int(118*xScale), int(555*yScale)))
 
 	lcd.output.Resize(fyne.NewSize(int(320*xScale), int(296*yScale)))
 	lcd.output.Move(fyne.NewPos(int(100*xScale), int(54*yScale)))
@@ -165,7 +198,30 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 	} else {
 		lcd.frame = canvas.NewImageFromResource(resourceFrameSvg)
 	}
-	content := fyne.NewContainerWithLayout(lcd, lcd.output, lcd.frame)
+	lcd.up = newGameButton(lcd, 2)
+	lcd.down = newGameButton(lcd, 3)
+	lcd.left = newGameButton(lcd, 1)
+	lcd.right = newGameButton(lcd, 0)
+
+	lcd.a = newGameButton(lcd, 4)
+	lcd.b = newGameButton(lcd, 5)
+	lcd.start = newGameButton(lcd, 7)
+	lcd.sel = newGameButton(lcd, 6)
+
+	if !a.Driver().Device().IsMobile() {
+		lcd.a.Hide()
+		lcd.b.Hide()
+		lcd.start.Hide()
+		lcd.sel.Hide()
+
+		lcd.up.Hide()
+		lcd.down.Hide()
+		lcd.left.Hide()
+		lcd.right.Hide()
+	}
+
+	content := fyne.NewContainerWithLayout(lcd, lcd.output, lcd.frame,
+		lcd.a, lcd.b, lcd.start, lcd.sel, lcd.up, lcd.down, lcd.left, lcd.right)
 
 	win.SetPadded(false)
 	win.SetContent(content)
