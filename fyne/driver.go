@@ -17,7 +17,8 @@ type LCD struct {
 	pixels *[160][144][3]uint8
 	screen *image.RGBA
 
-	frame, output fyne.CanvasObject
+	frame  *canvas.Image
+	output fyne.CanvasObject
 
 	up, down, left, right fyne.CanvasObject
 	start, sel, a, b      fyne.CanvasObject
@@ -146,35 +147,59 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 
 	xScale := float32(size.Width) / 520.0
 	yScale := float32(size.Height) / 400.0
+	screenXPos := int(100*xScale)
 	if fyne.CurrentDevice().IsMobile() {
-		yScale = float32(size.Height) / 2 / 400.0
+		if fyne.IsHorizontal(fyne.CurrentDevice().Orientation()) {
+			lcd.frame.Resource = resourceFramemobilelandscapeSvg
+			xScale = float32(size.Width) / 800.0
+			screenXPos = int(242*xScale)
+		} else {
+			lcd.frame.Resource = resourceFramemobileSvg
+			yScale = float32(size.Height) / 800.0
+		}
+		lcd.frame.Refresh()
 	}
 
 	abSize := fyne.NewSize(int(70*xScale), int(70*yScale))
-	lcd.a.Resize(abSize)
-	lcd.a.Move(fyne.NewPos(int(425*xScale), int(516*yScale)))
-	lcd.b.Resize(abSize)
-	lcd.b.Move(fyne.NewPos(int(328*xScale), int(565*yScale)))
-
 	startSize := fyne.NewSize(int(90*xScale), int(20*yScale))
-	lcd.start.Resize(startSize)
-	lcd.start.Move(fyne.NewPos(int(230*xScale), int(725*yScale)))
-	lcd.sel.Resize(startSize)
-	lcd.sel.Move(fyne.NewPos(int(135*xScale), int(725*yScale)))
-
 	dSize := fyne.NewSize(int(50*xScale), int(50*yScale))
+
+	lcd.a.Resize(abSize)
+	lcd.b.Resize(abSize)
+	lcd.start.Resize(startSize)
+	lcd.sel.Resize(startSize)
+
 	lcd.up.Resize(dSize)
 	lcd.down.Resize(dSize)
 	lcd.left.Resize(dSize)
 	lcd.right.Resize(dSize)
 
-	lcd.up.Move(fyne.NewPos(int(68*xScale), int(505*yScale)))
-	lcd.down.Move(fyne.NewPos(int(68*xScale), int(605*yScale)))
-	lcd.left.Move(fyne.NewPos(int(18*xScale), int(555*yScale)))
-	lcd.right.Move(fyne.NewPos(int(118*xScale), int(555*yScale)))
+	if fyne.CurrentDevice().IsMobile() {
+		dPadTop, dPadLeft := 505, 18
+		if fyne.IsHorizontal(fyne.CurrentDevice().Orientation()) {
+			dPadTop, dPadLeft = 105, 2
+
+			lcd.a.Move(fyne.NewPos(int(728*xScale), int(76*yScale)))
+			lcd.b.Move(fyne.NewPos(int(659*xScale), int(137*yScale)))
+
+			lcd.start.Move(fyne.NewPos(int(715*xScale), int(280*yScale)))
+			lcd.sel.Move(fyne.NewPos(int(650*xScale), int(320*yScale)))
+		} else {
+			lcd.a.Move(fyne.NewPos(int(425*xScale), int(516*yScale)))
+			lcd.b.Move(fyne.NewPos(int(328*xScale), int(565*yScale)))
+
+			lcd.start.Move(fyne.NewPos(int(230*xScale), int(725*yScale)))
+			lcd.sel.Move(fyne.NewPos(int(135*xScale), int(725*yScale)))
+		}
+
+		lcd.up.Move(fyne.NewPos(int(float32(dPadLeft+50)*xScale), int(float32(dPadTop)*yScale)))
+		lcd.down.Move(fyne.NewPos(int(float32(dPadLeft+50)*xScale), int(float32(dPadTop+100)*yScale)))
+		lcd.left.Move(fyne.NewPos(int(float32(dPadLeft)*xScale), int(float32(dPadTop+50)*yScale)))
+		lcd.right.Move(fyne.NewPos(int(float32(dPadLeft+100)*xScale), int(float32(dPadTop+50)*yScale)))
+	}
 
 	lcd.output.Resize(fyne.NewSize(int(320*xScale), int(296*yScale)))
-	lcd.output.Move(fyne.NewPos(int(100*xScale), int(54*yScale)))
+	lcd.output.Move(fyne.NewPos(screenXPos, int(54*yScale)))
 }
 
 func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
