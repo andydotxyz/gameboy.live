@@ -1,8 +1,9 @@
-# fyne.io/fyne v1.2.0-beta1
+# fyne.io/fyne v1.2.0-beta1.0.20191204153921-489f52f659b3
 fyne.io/fyne
 fyne.io/fyne/app
 fyne.io/fyne/canvas
 fyne.io/fyne/driver/desktop
+fyne.io/fyne/widget
 fyne.io/fyne/internal
 fyne.io/fyne/internal/app
 fyne.io/fyne/internal/driver/glfw
@@ -10,13 +11,12 @@ fyne.io/fyne/internal/driver/gomobile
 fyne.io/fyne/internal/painter/software
 fyne.io/fyne/test
 fyne.io/fyne/theme
-fyne.io/fyne/internal/driver
-fyne.io/fyne/widget
 fyne.io/fyne/internal/cache
+fyne.io/fyne/layout
+fyne.io/fyne/internal/driver
 fyne.io/fyne/internal/painter
 fyne.io/fyne/internal/painter/gl
-fyne.io/fyne/layout
-# github.com/faiface/beep v1.0.1
+# github.com/faiface/beep v1.0.2
 github.com/faiface/beep
 github.com/faiface/beep/effects
 github.com/faiface/beep/speaker
@@ -50,22 +50,12 @@ github.com/satori/go.uuid
 github.com/srwiley/oksvg
 # github.com/srwiley/rasterx v0.0.0-20181219215540-696f7edb7a7e
 github.com/srwiley/rasterx
-# golang.org/x/exp v0.0.0-20190306152737-a1d7652674e8
-golang.org/x/exp/shiny/driver/gldriver
-golang.org/x/exp/shiny/screen
-golang.org/x/exp/shiny/driver/internal/drawer
-golang.org/x/exp/shiny/driver/internal/errscreen
-golang.org/x/exp/shiny/driver/internal/event
-golang.org/x/exp/shiny/driver/internal/lifecycler
-golang.org/x/exp/shiny/driver/internal/win32
-golang.org/x/exp/shiny/driver/internal/x11key
 # golang.org/x/image v0.0.0-20190802002840-cff245a6509b
 golang.org/x/image/font
 golang.org/x/image/math/fixed
 golang.org/x/image/colornames
 golang.org/x/image/vector
-golang.org/x/image/math/f64
-# golang.org/x/mobile v0.0.0-20190719004257-d2bd2a29d028
+# golang.org/x/mobile v0.0.0-20190719004257-d2bd2a29d028 => github.com/fyne-io/mobile v0.0.0-20191204153723-f14fb9562406
 golang.org/x/mobile/app
 golang.org/x/mobile/event/key
 golang.org/x/mobile/event/lifecycle
@@ -75,7 +65,6 @@ golang.org/x/mobile/event/touch
 golang.org/x/mobile/gl
 golang.org/x/mobile/exp/f32
 golang.org/x/mobile/app/internal/callfn
-golang.org/x/mobile/event/mouse
 golang.org/x/mobile/geom
 golang.org/x/mobile/internal/mobileinit
 # golang.org/x/net v0.0.0-20191126235420-ef20fe5d7933
