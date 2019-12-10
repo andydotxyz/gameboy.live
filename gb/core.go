@@ -4,6 +4,7 @@ import (
 	"github.com/andydotxyz/fynegameboy/driver"
 	"github.com/andydotxyz/fynegameboy/util"
 	"log"
+	"os"
 	"time"
 )
 
@@ -386,6 +387,10 @@ func (core *Core) GetClockFreqCount() int {
 func (core *Core) initRom(romPath string) {
 	core.RamPath = romPath+".sav"
 	romData := core.readRomFile(romPath)
+	if romData == nil {
+		log.Println("[Cartridge] Missing game ROM - use '-r' parameter or run ./bundle_cart.sh")
+		os.Exit(1)
+	}
 	ramData := core.readRamFile(core.RamPath)
 	if ramData == nil {
 		ramData = make([]byte, 0x8000)

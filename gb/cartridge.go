@@ -5,6 +5,7 @@ import (
 	"github.com/andydotxyz/fynegameboy/util"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 /*
@@ -600,6 +601,18 @@ func (core *Core) readRomFile(romPath string) []byte {
 }
 
 func readDataFile(path string, ram bool) []byte {
+	if path == "" {
+		if ram == false {
+			return romResource.Content()
+		} else {
+			wd, err := os.Getwd()
+			if err != nil {
+				log.Fatal(err)
+			}
+			path = filepath.Join(wd, "bundled")
+		}
+	}
+
 	name := "rom"
 	if ram {
 		name = "ram"
