@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/canvas"
 	"fyne.io/fyne/driver/desktop"
 	"fyne.io/fyne/internal"
+	"fyne.io/fyne/internal/cache"
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/theme"
 )
@@ -88,6 +89,8 @@ func (t *TabContainer) SelectTabIndex(index int) {
 		}
 	}
 
+	r := cache.Renderer(t).(*tabContainerRenderer)
+	r.Layout(t.size)
 	t.refresh(t)
 }
 
@@ -99,26 +102,6 @@ func (t *TabContainer) CurrentTabIndex() int {
 func (t *TabContainer) makeButton(item *TabItem) *tabButton {
 	return &tabButton{Text: item.Text, Icon: item.Icon, OnTap: func() { t.SelectTab(item) }}
 }
-
-/*
-// Prepend inserts a new CanvasObject at the top of the group
-func (t *TabContainer) Prepend(object fyne.CanvasObject) {
-	t.Items = append(t.Items, item)
-	t.tabBar.Append(t.makeButton(item))
-	t.children = append(t.children, item.Content)
-
-	t.CreateRenderer().Refresh()}
-}
-
-// Append adds a new CanvasObject to the end of the group
-func (t *TabContainer) Append(item TabItem) {
-	t.Items = append(t.Items, item)
-//	t.tabBar.Append(t.makeButton(item))
-//	t.children = append(t.children, item.Content)
-
-	t.CreateRenderer().Refresh()
-}
-*/
 
 // CreateRenderer is a private method to Fyne which links this widget to its renderer
 func (t *TabContainer) CreateRenderer() fyne.WidgetRenderer {
@@ -136,7 +119,6 @@ func (t *TabContainer) CreateRenderer() fyne.WidgetRenderer {
 	}
 	tabBar := t.buildTabBar(buttons)
 	line := canvas.NewRectangle(theme.ButtonColor())
-	objects = append(objects, line, tabBar)
 	return &tabContainerRenderer{tabBar: tabBar, line: line, objects: objects, container: t}
 }
 
@@ -163,10 +145,40 @@ func (t *TabContainer) buildTabBar(buttons []fyne.CanvasObject) *fyne.Container 
 	return tabBar
 }
 
+// Append adds a new TabItem to the rightmost side of the tab panel
+func (t *TabContainer) Append(item *TabItem) {
+	r := cache.Renderer(t).(*tabContainerRenderer)
+	t.Items = append(t.Items, item)
+	r.objects = append(r.objects, item.Content)
+	r.tabBar.Objects = append(r.tabBar.Objects, t.makeButton(item))
+
+	t.Refresh()
+}
+
+// Remove tab by value
+func (t *TabContainer) Remove(item *TabItem) {
+	for index, existingItem := range t.Items {
+		if existingItem == item {
+			t.RemoveIndex(index)
+			break
+		}
+	}
+}
+
+// RemoveIndex removes tab by index
+func (t *TabContainer) RemoveIndex(index int) {
+	r := cache.Renderer(t).(*tabContainerRenderer)
+	t.Items = append(t.Items[:index], t.Items[index+1:]...)
+	r.objects = append(r.objects[:index], r.objects[index+1:]...)
+	r.tabBar.Objects = append(r.tabBar.Objects[:index], r.tabBar.Objects[index+1:]...)
+
+	t.Refresh()
+}
+
 // SetTabLocation sets the location of the tab bar
 func (t *TabContainer) SetTabLocation(l TabLocation) {
 	t.tabLocation = l
-	r := Renderer(t).(*tabContainerRenderer)
+	r := cache.Renderer(t).(*tabContainerRenderer)
 	buttons := r.tabBar.Objects
 	if fyne.CurrentDevice().IsMobile() || l == TabLocationLeading || l == TabLocationTrailing {
 		for _, b := range buttons {
@@ -177,10 +189,9 @@ func (t *TabContainer) SetTabLocation(l TabLocation) {
 			b.(*tabButton).IconPosition = buttonIconInline
 		}
 	}
-	r.tabBar.Objects = nil
 	r.tabBar = t.buildTabBar(buttons)
-	r.objects[len(r.objects)-1] = r.tabBar
-	r.Refresh()
+
+	r.Layout(t.size)
 }
 
 func (t *TabContainer) mismatchedContent() bool {
@@ -217,6 +228,7 @@ type tabContainerRenderer struct {
 	tabBar *fyne.Container
 	line   *canvas.Rectangle
 
+	// objects holds only the CanvasObject of the tabs' content
 	objects   []fyne.CanvasObject
 	container *TabContainer
 }
@@ -302,14 +314,12 @@ func (t *tabContainerRenderer) BackgroundColor() color.Color {
 }
 
 func (t *tabContainerRenderer) Objects() []fyne.CanvasObject {
-	return t.objects
+	return append(t.objects, t.tabBar, t.line)
 }
 
 func (t *tabContainerRenderer) Refresh() {
 	t.line.FillColor = theme.ButtonColor()
 	t.line.Refresh()
-
-	t.Layout(t.container.Size().Union(t.container.MinSize()))
 
 	for i, child := range t.container.Items {
 		old := t.objects[i]
@@ -326,7 +336,6 @@ func (t *tabContainerRenderer) Refresh() {
 			child.Content.Hide()
 		}
 	}
-	canvas.Refresh(t.container)
 
 	for i, button := range t.tabBar.Objects {
 		if i == t.container.current {
@@ -337,6 +346,7 @@ func (t *tabContainerRenderer) Refresh() {
 
 		button.Refresh()
 	}
+	canvas.Refresh(t.container)
 }
 
 func (t *tabContainerRenderer) Destroy() {
