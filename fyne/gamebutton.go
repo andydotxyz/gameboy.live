@@ -2,9 +2,9 @@ package fyne
 
 import (
 	"image/color"
-	"time"
 
 	"fyne.io/fyne"
+	"fyne.io/fyne/driver/mobile"
 	"fyne.io/fyne/widget"
 )
 
@@ -14,13 +14,16 @@ type gameButton struct {
 	lcd        *LCD
 }
 
-func (g *gameButton) Tapped(*fyne.PointEvent) {
+func (g *gameButton) TouchDown(*mobile.TouchEvent) {
 	g.lcd.downCode(g.buttonCode)
-	time.Sleep(time.Millisecond * 100)
+}
+
+func (g *gameButton) TouchUp(*mobile.TouchEvent) {
 	g.lcd.upCode(g.buttonCode)
 }
 
-func (g *gameButton) TappedSecondary(*fyne.PointEvent) {
+func (g *gameButton) TouchCancel(*mobile.TouchEvent) {
+	g.lcd.upCode(g.buttonCode)
 }
 
 func (g *gameButton) CreateRenderer() fyne.WidgetRenderer {
