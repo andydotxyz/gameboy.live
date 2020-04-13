@@ -1,3 +1,5 @@
+// auto-generated
+
 package gb
 
 import "fyne.io/fyne"
