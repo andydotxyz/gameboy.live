@@ -3,6 +3,22 @@
 This file lists the main changes with each version of the Fyne toolkit.
 More detailed release notes can be found on the [releases page](https://github.com/fyne-io/fyne/releases). 
 
+## 1.3 - In Progress
+
+### Added
+ 
+* Desktop apps can now create splash windows
+* Support changing the text on form submit/cancel buttons
+
+### Changed
+
+* Upgraded underlying GLFW library to fix various issues (#183, #61)
+
+### Fixed
+
+*
+
+
 ## 1.2.4 - 13 April 2020
 
 ### Added

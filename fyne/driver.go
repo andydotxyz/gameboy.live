@@ -17,8 +17,7 @@ type LCD struct {
 	pixels *[160][144][3]uint8
 	screen *image.RGBA
 
-	frame  *canvas.Image
-	output fyne.CanvasObject
+	frame, output  *canvas.Image
 
 	up, down, left, right fyne.CanvasObject
 	start, sel, a, b      fyne.CanvasObject
@@ -51,7 +50,7 @@ func (lcd *LCD) UpdateInput() bool {
 func (lcd *LCD) NewInput(b []byte) {
 }
 
-func (lcd *LCD) draw(w, h int) image.Image {
+func (lcd *LCD) draw() image.Image {
 	i := 0
 	for y := 0; y < 144; y++ {
 		for x := 0; x < 160; x++ {
@@ -208,12 +207,15 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 	win := a.NewWindow(fmt.Sprintf("GameBoy - %s", lcd.title))
 
 	lcd.screen = image.NewRGBA(image.Rect(0, 0, 160, 144))
-	lcd.output = canvas.NewRaster(lcd.draw)
+	lcd.output = canvas.NewImageFromImage(lcd.screen)
+	lcd.output.ScaleMode = canvas.ImageScalePixels
+
 	go func() {
 		for {
 			// drawSignal was sent by the emulator
 			<-drawSignal
 
+			lcd.draw()
 			canvas.Refresh(lcd.output)
 		}
 	}()
