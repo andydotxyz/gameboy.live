@@ -28,8 +28,8 @@ Usage of gbdotlive:
 
 Play a specified ROM file in GUI mode:
 
-```
-fynegameboy "Tetris.gb" 
+```bash
+$ fynegameboy "Tetris.gb" 
 ```
 
 Alternatively you can just run the application and play
@@ -37,6 +37,21 @@ Alternatively you can just run the application and play
 Many thanks to [Brian Norman](https://github.com/gingemonster) for permission to embed the game.
 
 ![](img/dino.png)
+
+### Mobile
+
+This app also supports a touchscreen configuration for mobile devices.
+To build for a mobile device you need to use the `fyne` tool's package function:
+
+```bash
+$ go get fyne.io/fyne/cmd/fyne
+$ fyne package -os android -appID xyz.andy.fynegameboy
+$ adb install fynegameboy
+```
+
+![](img/android.png)
+
+*The Tetris game is not associated with this repository*
 
 ## Keyboard instruction
 
