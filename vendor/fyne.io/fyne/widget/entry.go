@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne"
 	"fyne.io/fyne/canvas"
 	"fyne.io/fyne/driver/desktop"
+	"fyne.io/fyne/driver/mobile"
 	"fyne.io/fyne/internal/widget"
 	"fyne.io/fyne/theme"
 )
@@ -26,6 +27,7 @@ var _ fyne.Tappable = (*Entry)(nil)
 var _ fyne.Widget = (*Entry)(nil)
 var _ desktop.Mouseable = (*Entry)(nil)
 var _ desktop.Keyable = (*Entry)(nil)
+var _ mobile.Keyboardable = (*Entry)(nil)
 
 // Entry widget allows simple text to be input when focused.
 type Entry struct {
@@ -56,7 +58,7 @@ type Entry struct {
 
 	// selecting indicates whether the cursor has moved since it was at the selection start location
 	selecting bool
-	popUp     *widget.PopUpMenu
+	popUp     *PopUpMenu
 	// TODO: Add OnSelectChanged
 
 	// ActionItem is a small item which is displayed at the outer right of the entry (like a password revealer)
@@ -591,6 +593,19 @@ func (e *Entry) TypedShortcut(shortcut fyne.Shortcut) {
 	e.shortcut.TypedShortcut(shortcut)
 }
 
+// Keyboard implements the Keyboardable interface
+// Implements: mobile.Keyboardable
+func (e *Entry) Keyboard() mobile.KeyboardType {
+	e.propertyLock.RLock()
+	defer e.propertyLock.RUnlock()
+
+	if e.MultiLine {
+		return mobile.DefaultKeyboard
+	}
+
+	return mobile.SingleLineKeyboard
+}
+
 // concealed tells the rendering textProvider if we are a concealed field
 func (e *Entry) concealed() bool {
 	return e.Password
@@ -1000,6 +1015,8 @@ func (r *entryRenderer) MinSize() fyne.Size {
 }
 
 func (r *entryRenderer) Objects() []fyne.CanvasObject {
+	r.entry.propertyLock.RLock()
+	defer r.entry.propertyLock.RUnlock()
 	// Objects are generated dynamically force selection rectangles to appear underneath the text
 	if r.entry.selecting {
 		return append(r.selection, r.objects...)
@@ -1012,6 +1029,8 @@ func (r *entryRenderer) Refresh() {
 	provider := r.entry.textProvider()
 	placeholder := r.entry.placeholderProvider()
 	content := r.entry.Text
+	focused := r.entry.focused
+	selections := r.selection
 	r.entry.propertyLock.RUnlock()
 
 	if content != string(provider.buffer) {
@@ -1026,7 +1045,7 @@ func (r *entryRenderer) Refresh() {
 	}
 
 	r.cursor.FillColor = theme.FocusColor()
-	if r.entry.focused {
+	if focused {
 		r.cursor.Show()
 		r.line.FillColor = theme.FocusColor()
 	} else {
@@ -1039,14 +1058,14 @@ func (r *entryRenderer) Refresh() {
 	}
 	r.moveCursor()
 
-	for _, selection := range r.selection {
+	for _, selection := range selections {
 		selection.(*canvas.Rectangle).Hidden = !r.entry.focused && !r.entry.disabled
 		selection.(*canvas.Rectangle).FillColor = theme.FocusColor()
 	}
 
-	r.entry.propertyLock.Lock()
+	r.entry.text.propertyLock.Lock()
 	r.entry.text.updateRowBounds()
-	r.entry.propertyLock.Unlock()
+	r.entry.text.propertyLock.Unlock()
 	r.entry.placeholder.propertyLock.Lock()
 	r.entry.placeholder.updateRowBounds()
 	r.entry.placeholder.propertyLock.Unlock()
@@ -1149,10 +1168,9 @@ func (r *entryRenderer) moveCursor() {
 	r.buildSelection()
 	r.entry.propertyLock.RLock()
 	provider := r.entry.textProvider()
-	r.entry.propertyLock.RUnlock()
-
-	r.entry.propertyLock.RLock()
+	provider.propertyLock.RLock()
 	size := provider.lineSizeToColumn(r.entry.CursorColumn, r.entry.CursorRow)
+	provider.propertyLock.RUnlock()
 	xPos := size.Width
 	yPos := size.Height * r.entry.CursorRow
 	r.entry.propertyLock.RUnlock()

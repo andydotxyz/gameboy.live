@@ -1,4 +1,4 @@
-# fyne.io/fyne v1.2.5-0.20200520090605-6f3963ffbd4a
+# fyne.io/fyne v1.3.0
 fyne.io/fyne
 fyne.io/fyne/app
 fyne.io/fyne/canvas
@@ -27,7 +27,7 @@ github.com/faiface/beep/effects
 github.com/faiface/beep/speaker
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
-# github.com/fyne-io/mobile v0.0.2-0.20200511203347-825e44fe5a95
+# github.com/fyne-io/mobile v0.0.2
 github.com/fyne-io/mobile/app
 github.com/fyne-io/mobile/app/internal/callfn
 github.com/fyne-io/mobile/event/key
@@ -57,14 +57,10 @@ github.com/gopherjs/gopherwasm/js
 # github.com/hajimehoshi/oto v0.3.1
 github.com/hajimehoshi/oto
 github.com/hajimehoshi/oto/internal/mux
-# github.com/logrusorgru/aurora v0.0.0-20190428105938-cea283e61946
-github.com/logrusorgru/aurora
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/satori/go.uuid v1.2.0
-github.com/satori/go.uuid
 # github.com/srwiley/oksvg v0.0.0-20200311192757-870daf9aa564
 github.com/srwiley/oksvg
 # github.com/srwiley/rasterx v0.0.0-20200120212402-85cb7272f5e9

@@ -2,6 +2,7 @@ package widget
 
 import (
 	"image/color"
+	"time"
 
 	"fyne.io/fyne"
 	"fyne.io/fyne/canvas"
@@ -58,14 +59,23 @@ func (s *selectRenderer) Layout(size fyne.Size) {
 }
 
 func (s *selectRenderer) BackgroundColor() color.Color {
-	if s.combo.hovered {
+	if s.combo.hovered || s.combo.tapped { // TODO tapped will be different to hovered when we have animation
 		return theme.HoverColor()
 	}
 	return theme.ButtonColor()
 }
 
 func (s *selectRenderer) Refresh() {
-	s.combo.propertyLock.Lock()
+	s.combo.propertyLock.RLock()
+	s.updateLabel()
+	s.updateIcon()
+	s.combo.propertyLock.RUnlock()
+
+	s.Layout(s.combo.Size())
+	canvas.Refresh(s.combo.super())
+}
+
+func (s *selectRenderer) updateLabel() {
 	s.label.Color = theme.TextColor()
 	s.label.TextSize = theme.TextSize()
 
@@ -78,16 +88,14 @@ func (s *selectRenderer) Refresh() {
 	} else {
 		s.label.Text = s.combo.Selected
 	}
+}
 
+func (s *selectRenderer) updateIcon() {
 	if false { // s.combo.down {
 		s.icon.Resource = theme.MenuDropUpIcon()
 	} else {
 		s.icon.Resource = theme.MenuDropDownIcon()
 	}
-	s.combo.propertyLock.Unlock()
-
-	s.Layout(s.combo.Size())
-	canvas.Refresh(s.combo.super())
 }
 
 // Select widget has a list of options, with the current one shown, and triggers an event func when clicked
@@ -99,8 +107,8 @@ type Select struct {
 	PlaceHolder string
 	OnChanged   func(string) `json:"-"`
 
-	hovered bool
-	popUp   *widget.PopUpMenu
+	hovered, tapped bool
+	popUp           *PopUpMenu
 }
 
 var _ fyne.Widget = (*Select)(nil)
@@ -143,6 +151,13 @@ func (s *Select) optionTapped(text string) {
 // Tapped is called when a pointer tapped event is captured and triggers any tap handler
 func (s *Select) Tapped(*fyne.PointEvent) {
 	c := fyne.CurrentApp().Driver().CanvasForObject(s.super())
+	s.tapped = true
+	defer func() { // TODO move to a real animation
+		time.Sleep(time.Millisecond * buttonTapDuration)
+		s.tapped = false
+		s.Refresh()
+	}()
+	s.Refresh()
 
 	var items []*fyne.MenuItem
 	for _, option := range s.Options {
@@ -188,6 +203,8 @@ func (s *Select) MinSize() fyne.Size {
 // CreateRenderer is a private method to Fyne which links this widget to its renderer
 func (s *Select) CreateRenderer() fyne.WidgetRenderer {
 	s.ExtendBaseWidget(s)
+	s.propertyLock.RLock()
+	defer s.propertyLock.RUnlock()
 	icon := NewIcon(theme.MenuDropDownIcon())
 	text := canvas.NewText(s.Selected, theme.TextColor())
 
@@ -200,7 +217,10 @@ func (s *Select) CreateRenderer() fyne.WidgetRenderer {
 	text.Alignment = fyne.TextAlignLeading
 
 	objects := []fyne.CanvasObject{text, icon}
-	return &selectRenderer{widget.NewShadowingRenderer(objects, widget.ButtonLevel), icon, text, s}
+	r := &selectRenderer{widget.NewShadowingRenderer(objects, widget.ButtonLevel), icon, text, s}
+	r.updateLabel()
+	r.updateIcon()
+	return r
 }
 
 // ClearSelected clears the current option of the select widget.  After
@@ -231,7 +251,7 @@ func (s *Select) updateSelected(text string) {
 
 // NewSelect creates a new select widget with the set list of options and changes handler
 func NewSelect(options []string, changed func(string)) *Select {
-	s := &Select{BaseWidget{}, "", options, defaultPlaceHolder, changed, false, nil}
+	s := &Select{BaseWidget{}, "", options, defaultPlaceHolder, changed, false, false, nil}
 	s.ExtendBaseWidget(s)
 	return s
 }
