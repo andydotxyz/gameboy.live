@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"path/filepath"
 
 	"github.com/andydotxyz/fynegameboy/driver"
 	"github.com/andydotxyz/fynegameboy/fyne"
@@ -47,6 +48,10 @@ func main() {
 	if h {
 		flag.Usage()
 		return
+	}
+
+	if len(flag.Args()) == 1 { // probably a ROM parameter
+		ROMPath, _ = filepath.Abs(flag.Arg(0))
 	}
 
 	driver := new(fyne.LCD)
