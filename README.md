@@ -32,6 +32,12 @@ Play a specified ROM file in GUI mode:
 fynegameboy "Tetris.gb" 
 ```
 
+Alternatively you can just run the application and play
+[Dino's Offline Adventure](https://github.com/gingemonster/DinosOfflineAdventure).
+Many thanks to [Brian Norman](https://github.com/gingemonster) for permission to embed the game.
+
+![](img/dino.png)
+
 ## Keyboard instruction
 
 | Keyboard | Gameboy |
