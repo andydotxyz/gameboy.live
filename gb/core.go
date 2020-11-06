@@ -129,10 +129,10 @@ func (core *Core) Run() {
 	// Execution interval depends on the FPS
 	ticker := time.NewTicker(time.Second / time.Duration(core.FPS))
 	for range ticker.C {
-		core.Update()
+		core.update()
 		// Check controller input interrupt
 		if core.Controller.UpdateInput() {
-			core.RequestInterrupt(4)
+			core.requestInterrupt(4)
 		}
 		// Check exit signal
 		if core.Exit {
@@ -145,7 +145,7 @@ func (core *Core) Run() {
 /*
 	Render a frame.
 */
-func (core *Core) Update() {
+func (core *Core) update() {
 	cyclesThisUpdate := 0
 
 	/*
@@ -164,16 +164,16 @@ func (core *Core) Update() {
 			cycles = core.ExecuteNextOPCode()
 		}
 		cyclesThisUpdate += cycles
-		core.UpdateTimers(cycles)
+		core.updateTimers(cycles)
 		core.UpdateGraphics(cycles)
-		cyclesThisUpdate += core.Interrupt()
-		core.UpdateIO(cycles)
+		cyclesThisUpdate += core.interrupt()
+		core.updateIO(cycles)
 
 	}
 	core.RenderScreen()
 }
 
-func (core *Core) UpdateIO(cycles int) {
+func (core *Core) updateIO(cycles int) {
 	data, reqInt := core.Serial.FetchByte(cycles)
 	if reqInt {
 		ret := core.Memory.MainMemory[0xFF02]
@@ -181,14 +181,14 @@ func (core *Core) UpdateIO(cycles int) {
 		core.Memory.MainMemory[0xFF02] = ret
 		//core.Serial.SetChannelStatus(util.TestBit(ret,0),util.TestBit(ret,7))
 		core.SerialByte = data
-		core.RequestInterrupt(3)
+		core.requestInterrupt(3)
 	}
 }
 
 /*
 	Check interrupt.
 */
-func (core *Core) Interrupt() int {
+func (core *Core) interrupt() int {
 
 	/*
 		If `EI`(Enable Interrupt) instruction was executed, Interrupt Mater Flag will
@@ -237,7 +237,7 @@ func (core *Core) Interrupt() int {
 				if util.TestBit(req, uint(i)) {
 					// Check whether this interrupt request is enabled in IE.
 					if util.TestBit(enabled, uint(i)) {
-						core.DoInterrupt(i)
+						core.doInterrupt(i)
 						return 20
 					}
 				}
@@ -250,7 +250,7 @@ func (core *Core) Interrupt() int {
 /*
 	Performing an interrupt
 */
-func (core *Core) DoInterrupt(id int) {
+func (core *Core) doInterrupt(id int) {
 
 	if !core.CPU.Flags.InterruptMaster && core.CPU.Halt {
 		core.CPU.Halt = false
@@ -294,17 +294,17 @@ func (core *Core) DoInterrupt(id int) {
 /*
 	Check and update timers.
 */
-func (core *Core) UpdateTimers(cycles int) {
-	core.DoDividerRegister(cycles)
-	if core.IsClockEnabled() {
+func (core *Core) updateTimers(cycles int) {
+	core.doDividerRegister(cycles)
+	if core.isClockEnabled() {
 		core.Timer.TimerCounter += cycles
-		if core.Timer.TimerCounter >= core.GetClockFreqCount() {
+		if core.Timer.TimerCounter >= core.getClockFreqCount() {
 			// reset m_TimerTracer to the correct value
-			core.SetClockFreq()
+			core.setClockFreq()
 			// timer about to overflow
 			if core.ReadMemory(0xFF05) == 255 {
 				core.WriteMemory(0xFF05, core.ReadMemory(0xFF06))
-				core.RequestInterrupt(2)
+				core.requestInterrupt(2)
 			} else {
 				core.WriteMemory(0xFF05, core.ReadMemory(0xFF05)+1)
 			}
@@ -315,7 +315,7 @@ func (core *Core) UpdateTimers(cycles int) {
 /*
 	Request an Interrupt.
 */
-func (core *Core) RequestInterrupt(id int) {
+func (core *Core) requestInterrupt(id int) {
 	//Read the present Interrupt Flag
 	req := core.ReadMemory(0xFF0F)
 	req = util.SetBit(req, uint(id))
@@ -323,11 +323,11 @@ func (core *Core) RequestInterrupt(id int) {
 }
 
 /*
-	Update divider register.
+	update divider register.
 	This register is incremented at rate of 16384Hz (~16779Hz on SGB).
 	In CGB Double Speed Mode it is incremented twice as fast, ie. at 32768Hz.
 */
-func (core *Core) DoDividerRegister(cycles int) {
+func (core *Core) doDividerRegister(cycles int) {
 	core.Timer.DividerRegister += cycles
 	if core.Timer.DividerRegister >= 255 {
 		core.Timer.DividerRegister = 0
@@ -338,14 +338,14 @@ func (core *Core) DoDividerRegister(cycles int) {
 /*
 	Reset clock frequency.
 */
-func (core *Core) SetClockFreq() {
+func (core *Core) setClockFreq() {
 	core.Timer.TimerCounter = 0
 }
 
 /*
 	Check whether clock is enabled.
 */
-func (core *Core) IsClockEnabled() bool {
+func (core *Core) isClockEnabled() bool {
 	if core.ReadMemory(0xFF07)&0x04 == 0x04 {
 		return true
 	}
@@ -355,7 +355,7 @@ func (core *Core) IsClockEnabled() bool {
 /*
 	Get clock frequency sign specified in TAC register.
 */
-func (core *Core) GetClockFreq() byte {
+func (core *Core) getClockFreq() byte {
 	return core.ReadMemory(0xFF07) & 0x3
 }
 
@@ -370,8 +370,8 @@ func (core *Core) GetClockFreq() byte {
              11:  16384 Hz   (~16780 Hz SGB)
 
 */
-func (core *Core) GetClockFreqCount() int {
-	switch core.GetClockFreq() {
+func (core *Core) getClockFreqCount() int {
+	switch core.getClockFreq() {
 	case 0:
 		return 1024
 	case 1:

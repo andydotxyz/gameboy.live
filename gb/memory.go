@@ -76,7 +76,7 @@ func (core *Core) initMemory() {
 func (core *Core) SaveRAM() {
 	if core.Memory.dirty {
 		core.Memory.dirty = false
-		core.Cartridge.MBC.SaveRam(core.RamPath)
+		core.Cartridge.MBC.SaveRam(core.RamURI)
 	}
 }
 
@@ -153,11 +153,11 @@ func (core *Core) WriteMemory(address uint16, data byte) {
 		//             01: 262144 Hz  (~268400 Hz SGB)
 		//             10:  65536 Hz   (~67110 Hz SGB)
 		//             11:  16384 Hz   (~16780 Hz SGB)
-		currentFreq := core.GetClockFreq()
+		currentFreq := core.getClockFreq()
 		core.Memory.MainMemory[0xFF07] = data
-		newFreq := core.GetClockFreq()
+		newFreq := core.getClockFreq()
 		if currentFreq != newFreq {
-			core.SetClockFreq()
+			core.setClockFreq()
 		}
 
 	} else if address >= 0xFF10 && address <= 0xFF3F {

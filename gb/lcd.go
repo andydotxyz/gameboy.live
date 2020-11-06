@@ -94,14 +94,14 @@ func (core *Core) SetLCDStatus() {
 
 	// just entered a new mode so request interupt
 	if reqInt && (mode != currentMode) {
-		core.RequestInterrupt(1)
+		core.requestInterrupt(1)
 	}
 
 	// check the conincidence flag
 	if currentLine == core.ReadMemory(0xFF45) {
 		status = util.SetBit(status, 2)
 		if util.TestBit(status, 6) {
-			core.RequestInterrupt(1)
+			core.requestInterrupt(1)
 		}
 	} else {
 		status = util.ClearBit(status, 2)
@@ -144,7 +144,7 @@ func (core *Core) UpdateGraphics(cycles int) {
 		// we have entered vertical blank period
 		if currentLine == 144 {
 			core.DrawScanLine()
-			core.RequestInterrupt(0)
+			core.requestInterrupt(0)
 		} else if currentLine > 153 {
 			// if gone past scanline 153 reset to 0
 			core.Memory.MainMemory[0xFF44] = 0
