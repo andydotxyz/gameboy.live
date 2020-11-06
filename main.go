@@ -57,7 +57,6 @@ func startGUI() {
 	d := fyne.NewDriver()
 
 	uri := storage.NewURI(fyneAPI.CurrentApp().Preferences().String("RomURI"))
-	log.Println("LOAD", uri.String())
 
 	var data []byte
 	if romPath == "" && uri.String() != "" {

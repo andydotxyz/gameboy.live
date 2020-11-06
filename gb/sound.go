@@ -99,10 +99,6 @@ const secondPerTick = 1 / 44100.0
 var doneInit = false
 
 func (sound *Sound) Init() {
-	if doneInit {
-		return
-	}
-	doneInit = true
 	log.Println("[Sound] Initialize Sound process unit")
 	sound.enable = true
 	sound.Channel2.enable = false
@@ -127,10 +123,13 @@ func (sound *Sound) Init() {
 }
 
 func (sound *Sound) Play() {
-	sr := beep.SampleRate(44100)
-	err := speaker.Init(sr, sr.N(time.Second/30))
-	if err != nil {
-		log.Println("[Warning] Failed to init sound speaker")
+	if !doneInit {
+		doneInit = true
+		sr := beep.SampleRate(44100)
+		err := speaker.Init(sr, sr.N(time.Second/30))
+		if err != nil {
+			log.Println("[Warning] Failed to init sound speaker")
+		}
 	}
 
 	stream := &beep.Mixer{}

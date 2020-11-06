@@ -119,7 +119,6 @@ func (core *Core) Init(romData []byte, u fyne.URI) {
 	}
 
 	if core.ToggleSound {
-		core.ToggleSound = false
 		core.Sound.Init()
 	}
 }
