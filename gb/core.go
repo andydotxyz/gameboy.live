@@ -1,8 +1,11 @@
 package gb
 
 import (
+	"fyne.io/fyne"
+	"fyne.io/fyne/storage"
 	"github.com/andydotxyz/fynegameboy/driver"
 	"github.com/andydotxyz/fynegameboy/util"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -82,7 +85,7 @@ type Core struct {
 	Timer     Timer
 	Exit      bool
 	GameTitle string
-	RamPath   string
+	RamURI    fyne.URI
 }
 
 type Timer struct {
@@ -92,7 +95,7 @@ type Timer struct {
 }
 
 // Initialize emulator
-func (core *Core) Init(romPath string) {
+func (core *Core) Init(romData []byte, u fyne.URI) {
 	core.SpeedMultiple = 0
 	core.Timer.TimerCounter = 0
 	core.Timer.DividerRegister = 0
@@ -100,7 +103,7 @@ func (core *Core) Init(romPath string) {
 	core.SerialByte = 0xFF
 	core.Serial.Receive = make(chan byte)
 
-	core.initRom(romPath)
+	core.initRom(romData, u)
 	core.initMemory()
 	core.initCPU()
 	core.initCB()
@@ -116,6 +119,7 @@ func (core *Core) Init(romPath string) {
 	}
 
 	if core.ToggleSound {
+		core.ToggleSound = false
 		core.Sound.Init()
 	}
 }
@@ -384,14 +388,33 @@ func (core *Core) GetClockFreqCount() int {
 /*
 	Initialize Cartridge, load rom file and decode rom props
 */
-func (core *Core) initRom(romPath string) {
-	core.RamPath = romPath+".sav"
-	romData := core.readRomFile(romPath)
+func (core *Core) initRom(romData []byte, u fyne.URI) {
+	if romData == nil {
+		romData = romResource.Content()
+	}
+
 	if romData == nil {
 		log.Println("[Cartridge] Missing game ROM - use '-r' parameter or run ./bundle_cart.sh")
 		os.Exit(1)
 	}
-	ramData := core.readRamFile(core.RamPath)
+
+	var ramData []byte
+	fileURI := u.String()
+	if fileURI != "" {
+		core.RamURI = storage.NewURI(u.String()[:len(u.String())-3] + ".sav")
+
+		read, err := storage.OpenFileFromURI(core.RamURI)
+		if err != nil {
+			log.Println("Could not create reader for URI", core.RamURI)
+		} else {
+			data, err := ioutil.ReadAll(read) // could ne not there yet
+			if err != nil {
+				log.Println("Could not read from URI", core.RamURI)
+			} else {
+				ramData = data
+			}
+		}
+	}
 	if ramData == nil {
 		ramData = make([]byte, 0x8000)
 	}

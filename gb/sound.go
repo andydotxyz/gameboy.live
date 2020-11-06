@@ -96,8 +96,13 @@ var sweepTime = [8]float64{
 }
 
 const secondPerTick = 1 / 44100.0
+var doneInit = false
 
 func (sound *Sound) Init() {
+	if doneInit {
+		return
+	}
+	doneInit = true
 	log.Println("[Sound] Initialize Sound process unit")
 	sound.enable = true
 	sound.Channel2.enable = false

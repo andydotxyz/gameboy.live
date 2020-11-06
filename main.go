@@ -2,9 +2,12 @@ package main
 
 import (
 	"flag"
+	"io/ioutil"
+	"log"
 	"path/filepath"
 
-	"github.com/andydotxyz/fynegameboy/driver"
+	fyneAPI "fyne.io/fyne"
+	"fyne.io/fyne/storage"
 	"github.com/andydotxyz/fynegameboy/fyne"
 	"github.com/andydotxyz/fynegameboy/gb"
 )
@@ -12,7 +15,7 @@ import (
 var (
 	h bool
 
-	ROMPath string
+	romPath string
 	SoundOn bool
 	FPS     int
 	Debug   bool
@@ -25,20 +28,77 @@ func init() {
 	flag.IntVar(&FPS, "f", 60, "Set the `FPS` in GUI mode")
 }
 
-func startGUI(screen driver.DisplayDriver, control driver.ControllerDriver) {
+func loadRom(romPath string) ([]byte, fyneAPI.URI) {
+	data, err := ioutil.ReadFile(romPath)
+	if err != nil {
+		log.Println("ERROR", err)
+		return nil, storage.NewURI("")
+	}
+
+	return data, storage.NewURI("file://" + romPath)
+}
+
+func newCore(d *fyne.LCD) *gb.Core {
 	core := new(gb.Core)
+
 	core.FPS = FPS
 	core.Clock = 4194304
 	core.Debug = Debug
-	core.DisplayDriver = screen
-	core.Controller = control
+	core.DisplayDriver = d
+	core.Controller = d
 	core.DrawSignal = make(chan bool)
 	core.SpeedMultiple = 0
 	core.ToggleSound = SoundOn
-	core.Init(ROMPath)
 
-	go core.Run()
-	screen.Run(core.DrawSignal, func() {
+	return core
+}
+
+func startGUI() {
+	d := fyne.NewDriver()
+
+	uri := storage.NewURI(fyneAPI.CurrentApp().Preferences().String("RomURI"))
+	log.Println("LOAD", uri.String())
+
+	var data []byte
+	if romPath == "" && uri.String() != "" {
+		read, err := storage.OpenFileFromURI(uri)
+		log.Println("err", err)
+		data, err = ioutil.ReadAll(read)
+		log.Println("err", err, len(data))
+	}
+
+	var core *gb.Core
+	start := func() {
+		core = newCore(d)
+		d.DrawSignal = core.DrawSignal
+
+		if data != nil && len(data) > 0 {
+			core.Init(data, uri)
+		} else {
+			core.Init(loadRom(romPath))
+		}
+
+		go core.Run()
+	}
+	start()
+
+	d.Reset = func() {
+		core.Exit = true
+		start()
+	}
+	d.Open = func(r fyneAPI.URIReadCloser) {
+		core.Exit = true
+		bytes, err := ioutil.ReadAll(r)
+		if err != nil {
+			fyneAPI.LogError("Unable to load ROM", err)
+			return
+		}
+		_ = r.Close()
+		data = bytes
+		start()
+	}
+
+	d.Run(core.DrawSignal, func() {
 		core.SaveRAM()
 	})
 }
@@ -51,9 +111,8 @@ func main() {
 	}
 
 	if len(flag.Args()) == 1 { // probably a ROM parameter
-		ROMPath, _ = filepath.Abs(flag.Arg(0))
+		romPath, _ = filepath.Abs(flag.Arg(0))
 	}
 
-	driver := new(fyne.LCD)
-	startGUI(driver, driver)
+	startGUI()
 }

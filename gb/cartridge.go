@@ -2,10 +2,11 @@ package gb
 
 import (
 	"bufio"
-	"github.com/andydotxyz/fynegameboy/util"
 	"log"
-	"os"
-	"path/filepath"
+
+	"fyne.io/fyne"
+	"fyne.io/fyne/storage"
+	"github.com/andydotxyz/fynegameboy/util"
 )
 
 /*
@@ -108,7 +109,7 @@ type MBC interface {
 	ReadRamBank(uint16) byte
 	WriteRamBank(uint16, byte)
 	HandleBanking(uint16, byte)
-	SaveRam(string)
+	SaveRam(fyne.URI)
 }
 
 /*
@@ -160,7 +161,7 @@ func (mbc *MBCRom) ReadRom(address uint16) byte {
 func (mbc *MBCRom) HandleBanking(address uint16, val byte) {
 }
 
-func (mbc *MBCRom) SaveRam(path string) {
+func (mbc *MBCRom) SaveRam(path fyne.URI) {
 }
 
 /*	Single ROM without MBC  END
@@ -320,7 +321,7 @@ func (mbc *MBC1) DoChangeROMRAMMode(val byte) {
 	}
 }
 
-func (mbc *MBC1) SaveRam(path string) {
+func (mbc *MBC1) SaveRam(path fyne.URI) {
 	writeRamFile(path, mbc.RAMBank)
 }
 
@@ -445,7 +446,7 @@ func (mbc *MBC2) DoChangeROMRAMMode(val byte) {
 	}
 }
 
-func (mbc *MBC2) SaveRam(path string) {
+func (mbc *MBC2) SaveRam(path fyne.URI) {
 	writeRamFile(path, mbc.RAMBank)
 }
 
@@ -585,7 +586,7 @@ func (mbc *MBC3) DoChangeROMRAMMode(val byte) {
 	}
 }
 
-func (mbc *MBC3) SaveRam(path string) {
+func (mbc *MBC3) SaveRam(path fyne.URI) {
 	writeRamFile(path, mbc.RAMBank)
 }
 
@@ -593,70 +594,20 @@ func (mbc *MBC3) SaveRam(path string) {
 		MBC3  END
 	====================================
 */
-/*
-	Read cartridge data from file
-*/
-func (core *Core) readRomFile(romPath string) []byte {
-	return readDataFile(romPath, false)
-}
 
-func readDataFile(path string, ram bool) []byte {
-	if path == "" {
-		if ram == false {
-			return romResource.Content()
-		} else {
-			wd, err := os.Getwd()
-			if err != nil {
-				log.Fatal(err)
-			}
-			path = filepath.Join(wd, "bundled")
-		}
-	}
-
-	name := "rom"
-	if ram {
-		name = "ram"
-	}
-	log.Println("[Core] Loading", name, "file...")
-	romFile, err := os.Open(path)
+func writeRamFile(ramPath fyne.URI, data []byte) {
+	write, err := storage.SaveFileToURI(ramPath)
 	if err != nil {
-		if os.IsNotExist(err) && ram {
-			return nil
-		}
-
-		log.Fatal(err)
+		log.Println("Failed to open save file", err)
+		return
 	}
-	defer romFile.Close()
+	defer write.Close()
 
-	stats, statsErr := romFile.Stat()
-	if statsErr != nil {
-		log.Fatal(statsErr)
-	}
-	var size int64 = stats.Size()
-	bytes := make([]byte, size)
-
-	bufReader := bufio.NewReader(romFile)
-	_, err = bufReader.Read(bytes)
-
-	log.Println("[Core]", size, "Bytes", name, "loaded")
-	return bytes
-}
-
-func (core *Core) readRamFile(ramPath string) []byte {
-	return readDataFile(ramPath, true)
-}
-
-func writeRamFile(ramPath string, data []byte) {
-	ramFile, err := os.Create(ramPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer ramFile.Close()
-
-	bufWriter := bufio.NewWriter(ramFile)
+	bufWriter := bufio.NewWriter(write)
 	size, err := bufWriter.Write(data)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Failed to write save", err)
+		return
 	}
 	log.Printf("[Core] %d Bytes ram written\n", size)
 }

@@ -8,12 +8,18 @@ import (
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
 	"fyne.io/fyne/canvas"
+	"fyne.io/fyne/dialog"
 	"fyne.io/fyne/driver/desktop"
 
 	"github.com/andydotxyz/fynegameboy/util"
 )
 
 type LCD struct {
+	Open func(fyne.URIReadCloser)
+	Reset func()
+	DrawSignal chan bool
+
+	app    fyne.App
 	pixels *[160][144][3]uint8
 	screen *image.RGBA
 
@@ -25,6 +31,10 @@ type LCD struct {
 	inputStatus *byte
 	interrupt   bool
 	title       string
+}
+
+func NewDriver() *LCD {
+	return &LCD{app: app.NewWithID("xyz.andy.gameboy")}
 }
 
 func (lcd *LCD) Init(pixels *[160][144][3]uint8, title string) {
@@ -202,10 +212,10 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 }
 
 func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
-	a := app.New()
-	a.SetIcon(resourceIconPng)
-	win := a.NewWindow(fmt.Sprintf("GameBoy - %s", lcd.title))
+	lcd.app.SetIcon(resourceIconPng)
+	win := lcd.app.NewWindow(fmt.Sprintf("GameBoy - %s", lcd.title))
 
+	lcd.DrawSignal = drawSignal
 	lcd.screen = image.NewRGBA(image.Rect(0, 0, 160, 144))
 	lcd.output = canvas.NewImageFromImage(lcd.screen)
 	lcd.output.ScaleMode = canvas.ImageScalePixels
@@ -213,14 +223,14 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 	go func() {
 		for {
 			// drawSignal was sent by the emulator
-			<-drawSignal
+			<-lcd.DrawSignal
 
 			lcd.draw()
 			canvas.Refresh(lcd.output)
 		}
 	}()
 
-	if a.Driver().Device().IsMobile() {
+	if lcd.app.Driver().Device().IsMobile() {
 		lcd.frame = canvas.NewImageFromResource(resourceFramemobileSvg)
 	} else {
 		lcd.frame = canvas.NewImageFromResource(resourceFrameSvg)
@@ -235,7 +245,7 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 	lcd.start = newGameButton(lcd, 7)
 	lcd.sel = newGameButton(lcd, 6)
 
-	if !a.Driver().Device().IsMobile() {
+	if !lcd.app.Driver().Device().IsMobile() {
 		lcd.a.Hide()
 		lcd.b.Hide()
 		lcd.start.Hide()
@@ -258,7 +268,32 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 	}
 	win.SetOnClosed(func() {
 		onQuit()
-		a.Quit()
+		lcd.app.Quit()
 	})
+	win.SetMainMenu(fyne.NewMainMenu(fyne.NewMenu("File",
+		fyne.NewMenuItem("Open...", func() {
+			open := dialog.NewFileOpen(func (u fyne.URIReadCloser, err error) {
+				if u == nil {
+					return
+				}
+				if err != nil {
+					dialog.ShowError(err, win)
+					return
+				}
+
+				lcd.app.Preferences().SetString("RomURI", u.URI().String())
+				lcd.Open(u)
+			}, win)
+//			open.SetFilter(storage.NewExtensionFileFilter([]string{".gb"}))
+			open.Show()
+		}),
+		fyne.NewMenuItem("Reset...", func() {
+			dialog.ShowConfirm("Reset game", "Are you sure you want to reset?", func(ok bool) {
+				if ok {
+					lcd.Reset()
+				}
+			}, win)
+		}),
+	)))
 	win.ShowAndRun()
 }
