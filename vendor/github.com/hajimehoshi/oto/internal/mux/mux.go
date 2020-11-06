@@ -31,6 +31,7 @@ type Mux struct {
 	m sync.RWMutex
 }
 
+// New creates a new Mux with the specified number of channels and bit depth.
 func New(channelNum, bitDepthInBytes int) *Mux {
 	m := &Mux{
 		channelNum:      channelNum,
@@ -41,6 +42,11 @@ func New(channelNum, bitDepthInBytes int) *Mux {
 	return m
 }
 
+// Read reads data from all of its readers, interprets it as samples with the bit depth
+// specified during its creation, then adds all of the samples together and fills the buf
+// slice with the result of this.
+//
+// If there are no readers, Read fills in some zeros to prevent a program from freezing.
 func (m *Mux) Read(buf []byte) (int, error) {
 	m.m.Lock()
 	defer m.m.Unlock()
@@ -56,8 +62,20 @@ func (m *Mux) Read(buf []byte) (int, error) {
 		if len(buf) < 256 {
 			n = len(buf)
 		}
-		copy(buf, make([]byte, n))
-		return n, nil
+
+		switch m.bitDepthInBytes {
+		case 1:
+			const offset = 128
+			for i := 0; i < n; i++ {
+				buf[i] = offset
+			}
+			return n, nil
+		case 2:
+			copy(buf, make([]byte, n))
+			return n, nil
+		default:
+			panic("not reached")
+		}
 	}
 
 	bs := m.channelNum * m.bitDepthInBytes
@@ -78,11 +96,13 @@ func (m *Mux) Read(buf []byte) (int, error) {
 	}
 
 	if l == 0 {
+		// Returning 0 without error can block the caller of Read forever. Call Gosched to encourage context switching.
+		runtime.Gosched()
 		return 0, nil
 	}
 
 	for _, p := range m.readers {
-		if _, err := p.Discard(l); err != nil {
+		if _, err := p.Discard(l); err != nil && err != io.EOF {
 			return 0, err
 		}
 	}
@@ -133,6 +153,7 @@ func (m *Mux) Read(buf []byte) (int, error) {
 	return l, nil
 }
 
+// Close invalidates the Mux. It doesn't close its readers.
 func (m *Mux) Close() error {
 	m.m.Lock()
 	runtime.SetFinalizer(m, nil)
@@ -142,6 +163,7 @@ func (m *Mux) Close() error {
 	return nil
 }
 
+// AddSource adds a reader to the Mux.
 func (m *Mux) AddSource(source io.Reader) {
 	m.m.Lock()
 	if m.closed {
@@ -154,6 +176,7 @@ func (m *Mux) AddSource(source io.Reader) {
 	m.m.Unlock()
 }
 
+// RemoveSource removes a reader from the Mux.
 func (m *Mux) RemoveSource(source io.Reader) {
 	m.m.Lock()
 	if m.closed {

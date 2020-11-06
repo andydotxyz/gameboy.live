@@ -23,6 +23,12 @@ import (
 	"github.com/hajimehoshi/oto/internal/mux"
 )
 
+// Context is the main object in Oto. It interacts with the audio drivers.
+//
+// To play sound with Oto, first create a context. Then use the context to create
+// an arbitrary number of players. Then use the players to play sound.
+//
+// There can only be one context at any time. Closing a context and opening a new one is allowed.
 type Context struct {
 	driverWriter *driverWriter
 	mux          *mux.Mux
@@ -84,15 +90,6 @@ func NewContext(sampleRate, channelNum, bitDepthInBytes, bufferSizeInBytes int) 
 	return c, nil
 }
 
-// NewPlayer is a short-hand of creating a Context by NewContext and a Player by the context's NewPlayer.
-func NewPlayer(sampleRate, channelNum, bitDepthInBytes, bufferSizeInBytes int) (*Player, error) {
-	c, err := NewContext(sampleRate, channelNum, bitDepthInBytes, bufferSizeInBytes)
-	if err != nil {
-		return nil, err
-	}
-	return c.NewPlayer(), nil
-}
-
 // NewPlayer creates a new, ready-to-use Player belonging to the Context.
 func (c *Context) NewPlayer() *Player {
 	p := newPlayer(c)
@@ -116,8 +113,14 @@ func (c *Context) Close() error {
 	return <-c.errCh
 }
 
+type tryWriteCloser interface {
+	io.Closer
+
+	TryWrite([]byte) (int, error)
+}
+
 type driverWriter struct {
-	driver         *driver
+	driver         tryWriteCloser
 	bufferSize     int
 	bytesPerSecond int
 
@@ -157,8 +160,5 @@ func (d *driverWriter) Close() error {
 	// This is the simplest (but ugly) fix.
 	// TODO: Implement player's Close to wait the buffer played.
 	time.Sleep(time.Second * time.Duration(d.bufferSize) / time.Duration(d.bytesPerSecond))
-	if err := d.driver.Close(); err != nil {
-		return err
-	}
-	return nil
+	return d.driver.Close()
 }

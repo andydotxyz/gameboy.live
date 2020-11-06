@@ -1,6 +1,6 @@
 // +build android
 
-package app // import golang.org/x/mobile/app
+package app // import "golang.org/x/mobile/app"
 
 import fynemobile "github.com/fyne-io/mobile/app"
 

@@ -25,12 +25,12 @@ import (
 // Use Write method to play samples.
 type Player struct {
 	context *Context
-	r       *io.PipeReader
-	w       *io.PipeWriter
+	r       io.ReadCloser
+	w       io.WriteCloser
 }
 
 func newPlayer(context *Context) *Player {
-	r, w := io.Pipe()
+	r, w := pipe()
 	p := &Player{
 		context: context,
 		r:       r,
@@ -79,10 +79,7 @@ func (p *Player) Close() error {
 	p.context = nil
 
 	// Close the pipe reader after RemoveSource, or ErrClosedPipe happens at Read-ing.
-	if err := p.r.Close(); err != nil {
-		return err
-	}
-	return nil
+	return p.r.Close()
 }
 
 func max(a, b int) int {

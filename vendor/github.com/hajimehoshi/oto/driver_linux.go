@@ -19,7 +19,8 @@
 package oto
 
 /*
-#cgo LDFLAGS: -lasound
+#cgo pkg-config: alsa
+
 #include <alsa/asoundlib.h>
 
 static void check(int *err, int newErr) {
@@ -73,14 +74,16 @@ func alsaError(err C.int) error {
 	return fmt.Errorf("oto: ALSA error: %s", C.GoString(C.snd_strerror(err)))
 }
 
-func newDriver(sampleRate, numChans, bitDepthInBytes, bufferSizeInBytes int) (*driver, error) {
+func newDriver(sampleRate, numChans, bitDepthInBytes, bufferSizeInBytes int) (tryWriteCloser, error) {
 	p := &driver{
 		numChans:        numChans,
 		bitDepthInBytes: bitDepthInBytes,
 	}
 
 	// open a default ALSA audio device for blocking stream playback
-	if errCode := C.snd_pcm_open(&p.handle, C.CString("default"), C.SND_PCM_STREAM_PLAYBACK, 0); errCode < 0 {
+	cs := C.CString("default")
+	defer C.free(unsafe.Pointer(cs))
+	if errCode := C.snd_pcm_open(&p.handle, cs, C.SND_PCM_STREAM_PLAYBACK, 0); errCode < 0 {
 		return nil, alsaError(errCode)
 	}
 
@@ -96,7 +99,7 @@ func newDriver(sampleRate, numChans, bitDepthInBytes, bufferSizeInBytes int) (*d
 	var format C.snd_pcm_format_t
 	switch bitDepthInBytes {
 	case 1:
-		format = C.SND_PCM_FORMAT_S8
+		format = C.SND_PCM_FORMAT_U8
 	case 2:
 		format = C.SND_PCM_FORMAT_S16_LE
 	default:
@@ -146,7 +149,7 @@ func (p *driver) TryWrite(data []byte) (n int, err error) {
 			continue
 		}
 		if wrote < 0 {
-			// an error occured while writing samples
+			// an error occurred while writing samples
 			return 0, alsaError(C.int(wrote))
 		}
 		p.buf = p.buf[int(wrote)*p.numChans*p.bitDepthInBytes:]
