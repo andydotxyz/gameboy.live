@@ -2,7 +2,7 @@
 
 package gb
 
-import "fyne.io/fyne"
+import "fyne.io/fyne/v2"
 
 var romResource = &fyne.StaticResource{
 	StaticName: "dinosofflineadventure.gb",

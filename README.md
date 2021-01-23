@@ -44,7 +44,7 @@ This app also supports a touchscreen configuration for mobile devices.
 To build for a mobile device you need to use the `fyne` tool's package function:
 
 ```bash
-$ go get fyne.io/fyne/cmd/fyne
+$ go get fyne.io/fyne/v2/cmd/fyne
 $ fyne package -os android -appID xyz.andy.fynegameboy
 $ adb install fynegameboy
 ```

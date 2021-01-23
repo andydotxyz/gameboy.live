@@ -1,6 +1,6 @@
 package fyne
 
-import "fyne.io/fyne"
+import "fyne.io/fyne/v2"
 
 var resourceFrameSvg = &fyne.StaticResource{
 	StaticName: "frame.svg",

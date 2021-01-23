@@ -1,5 +1,5 @@
-fyne.io/fyne v1.4.0 h1:4fdy+SIVen+iKtBvpIegi4ox1f5IygtXhNJFS2aEucQ=
-fyne.io/fyne v1.4.0/go.mod h1:j6pz0cVZSgVo3VnVS4MSTOW7yjK1KW8erwBnUoWKgqI=
+fyne.io/fyne/v2 v2.0.0 h1:TfsS3bNq5663BpXsoz1OfzyjcaMqqOf9usI8ZKkw4IE=
+fyne.io/fyne/v2 v2.0.0/go.mod h1:FmobqvPpBW+nG1nDyxZWf1SQLED9g/vXIxiIIVjHazY=
 github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/Kodeworks/golang-image-ico v0.0.0-20141118225523-73f0f4cfade9/go.mod h1:7uhhqiBaR4CpN0k9rMjOtjpcfGd6DG2m04zQxKnWQ0I=
 github.com/akavel/rsrc v0.8.0/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
@@ -10,13 +10,17 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/faiface/beep v1.0.3-0.20200712202812-d836f29bdc50 h1:nW1/uI5xoR3xXmSR0YewPa+xYNi/YRF2hGjY+VAEeeQ=
 github.com/faiface/beep v1.0.3-0.20200712202812-d836f29bdc50/go.mod h1:nv+7LjRrok3sDtIZN8d405o60tIHcrrKlRCtxl41fEU=
+github.com/fredbi/uri v0.0.0-20181227131451-3dcfdacbaaf3 h1:FDqhDm7pcsLhhWl1QtD8vlzI4mm59llRvNzrFg6/LAA=
+github.com/fredbi/uri v0.0.0-20181227131451-3dcfdacbaaf3/go.mod h1:CzM2G82Q9BDUvMTGHnXf/6OExw/Dz2ivDj48nVg7Lg8=
 github.com/fsnotify/fsnotify v1.4.9 h1:hsms1Qyu0jgnwNXIxa+/V/PDsU6CfLf6CNO8H7IWoS4=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
+github.com/fyne-io/glfw/v3.3/glfw v0.0.0-20201123143003-f2279069162d h1:WfVxpuVm+5Gr3ipAoWrxV8lJFYkaBWoEwFRrWThWRSU=
+github.com/fyne-io/glfw/v3.3/glfw v0.0.0-20201123143003-f2279069162d/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
 github.com/fyne-io/gomobile-bridge v0.0.2 h1:TkZiThet93ohRx8VJ23Ve2BA8JUoVgEo4LRoMOCKIgE=
 github.com/fyne-io/gomobile-bridge v0.0.2/go.mod h1:M8+QqJYNzVoVEfHOEwlnLG9csRggXqDQSQMAtRTTKWw=
 github.com/fyne-io/mobile v0.0.1/go.mod h1:/kOrWrZB6sasLbEy2JIvr4arEzQTXBTZGb3Y96yWbHY=
-github.com/fyne-io/mobile v0.1.1 h1:Snu9tKaVgu81314egPeqMC09z/k4D/bts0n1O2MfPbk=
-github.com/fyne-io/mobile v0.1.1/go.mod h1:/kOrWrZB6sasLbEy2JIvr4arEzQTXBTZGb3Y96yWbHY=
+github.com/fyne-io/mobile v0.1.2 h1:0HaXDtOOwyOTn3Umi0uKVCOgJtfX73c6unC4U8i5VZU=
+github.com/fyne-io/mobile v0.1.2/go.mod h1:/kOrWrZB6sasLbEy2JIvr4arEzQTXBTZGb3Y96yWbHY=
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/tcell v1.3.0/go.mod h1:Hjvr+Ofd+gLglo7RYKxxnzCBmev3BzsS67MebKS4zMM=
 github.com/go-audio/audio v1.0.0/go.mod h1:6uAu0+H2lHkwdGsAY+j2wHPNPpPoeg5AaEFh9FlA+Zs=
@@ -24,8 +28,6 @@ github.com/go-audio/riff v1.0.0/go.mod h1:l3cQwc85y79NQFCRB7TiPoNiaijp6q8Z0Uv38r
 github.com/go-audio/wav v1.0.0/go.mod h1:3yoReyQOsiARkvPl3ERCi8JFjihzG6WhjYpZCf5zAWE=
 github.com/go-gl/gl v0.0.0-20190320180904-bf2b1f2f34d7 h1:SCYMcCJ89LjRGwEa0tRluNRiMjZHalQZrVrvTbPh+qw=
 github.com/go-gl/gl v0.0.0-20190320180904-bf2b1f2f34d7/go.mod h1:482civXOzJJCPzJ4ZOX/pwvXBWSnzD4OKMdH4ClKGbk=
-github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200625191551-73d3c3675aa3 h1:q521PfSp5/z6/sD9FZZOWj4d1MLmfQW8PkRnI9M6PCE=
-github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200625191551-73d3c3675aa3/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
 github.com/godbus/dbus/v5 v5.0.3 h1:ZqHaoEF7TBzh4jzPmqVhE/5A1z9of6orkAe5uHoAeME=
 github.com/godbus/dbus/v5 v5.0.3/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/goki/freetype v0.0.0-20181231101311-fa8a33aabaff h1:W71vTCKoxtdXgnm1ECDFkfQnpdqAO00zzGXLA5yaEX8=
@@ -65,6 +67,7 @@ github.com/srwiley/oksvg v0.0.0-20200311192757-870daf9aa564/go.mod h1:afMbS0qvv1
 github.com/srwiley/rasterx v0.0.0-20200120212402-85cb7272f5e9 h1:m59mIOBO4kfcNCEzJNy71UkeF4XIx2EVmL9KLwDQdmM=
 github.com/srwiley/rasterx v0.0.0-20200120212402-85cb7272f5e9/go.mod h1:mvWM0+15UqyrFKqdRjY6LuAVJR0HOVhJlEgZ5JWtSWU=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.5.1 h1:nOGnQDM7FYENwehXlg/kFVnos3rEvtKTjRvOWSzb6H4=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

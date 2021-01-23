@@ -5,11 +5,11 @@ import (
 	"image"
 	"log"
 
-	"fyne.io/fyne"
-	"fyne.io/fyne/app"
-	"fyne.io/fyne/canvas"
-	"fyne.io/fyne/dialog"
-	"fyne.io/fyne/driver/desktop"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/driver/desktop"
 
 	"github.com/andydotxyz/fynegameboy/util"
 )
@@ -156,12 +156,12 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 
 	xScale := float32(size.Width) / 520.0
 	yScale := float32(size.Height) / 400.0
-	screenXPos := int(100*xScale)
+	screenXPos := 100*xScale
 	if fyne.CurrentDevice().IsMobile() {
 		if fyne.IsHorizontal(fyne.CurrentDevice().Orientation()) {
 			lcd.frame.Resource = resourceFramemobilelandscapeSvg
 			xScale = float32(size.Width) / 800.0
-			screenXPos = int(242*xScale)
+			screenXPos = 242*xScale
 		} else {
 			lcd.frame.Resource = resourceFramemobileSvg
 			yScale = float32(size.Height) / 800.0
@@ -169,9 +169,9 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 		lcd.frame.Refresh()
 	}
 
-	abSize := fyne.NewSize(int(70*xScale), int(70*yScale))
-	startSize := fyne.NewSize(int(90*xScale), int(20*yScale))
-	dSize := fyne.NewSize(int(50*xScale), int(50*yScale))
+	abSize := fyne.NewSize(70*xScale, 70*yScale)
+	startSize := fyne.NewSize(90*xScale, 20*yScale)
+	dSize := fyne.NewSize(50*xScale, 50*yScale)
 
 	lcd.a.Resize(abSize)
 	lcd.b.Resize(abSize)
@@ -188,27 +188,27 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 		if fyne.IsHorizontal(fyne.CurrentDevice().Orientation()) {
 			dPadTop, dPadLeft = 105, 2
 
-			lcd.a.Move(fyne.NewPos(int(728*xScale), int(76*yScale)))
-			lcd.b.Move(fyne.NewPos(int(659*xScale), int(137*yScale)))
+			lcd.a.Move(fyne.NewPos(728*xScale, 76*yScale))
+			lcd.b.Move(fyne.NewPos(659*xScale, 137*yScale))
 
-			lcd.start.Move(fyne.NewPos(int(715*xScale), int(280*yScale)))
-			lcd.sel.Move(fyne.NewPos(int(650*xScale), int(320*yScale)))
+			lcd.start.Move(fyne.NewPos(715*xScale, 280*yScale))
+			lcd.sel.Move(fyne.NewPos(650*xScale, 320*yScale))
 		} else {
-			lcd.a.Move(fyne.NewPos(int(425*xScale), int(516*yScale)))
-			lcd.b.Move(fyne.NewPos(int(328*xScale), int(565*yScale)))
+			lcd.a.Move(fyne.NewPos(425*xScale, 516*yScale))
+			lcd.b.Move(fyne.NewPos(328*xScale, 565*yScale))
 
-			lcd.start.Move(fyne.NewPos(int(230*xScale), int(725*yScale)))
-			lcd.sel.Move(fyne.NewPos(int(135*xScale), int(725*yScale)))
+			lcd.start.Move(fyne.NewPos(230*xScale, 725*yScale))
+			lcd.sel.Move(fyne.NewPos(135*xScale, 725*yScale))
 		}
 
-		lcd.up.Move(fyne.NewPos(int(float32(dPadLeft+50)*xScale), int(float32(dPadTop)*yScale)))
-		lcd.down.Move(fyne.NewPos(int(float32(dPadLeft+50)*xScale), int(float32(dPadTop+100)*yScale)))
-		lcd.left.Move(fyne.NewPos(int(float32(dPadLeft)*xScale), int(float32(dPadTop+50)*yScale)))
-		lcd.right.Move(fyne.NewPos(int(float32(dPadLeft+100)*xScale), int(float32(dPadTop+50)*yScale)))
+		lcd.up.Move(fyne.NewPos(float32(dPadLeft+50)*xScale, float32(dPadTop)*yScale))
+		lcd.down.Move(fyne.NewPos(float32(dPadLeft+50)*xScale, float32(dPadTop+100)*yScale))
+		lcd.left.Move(fyne.NewPos(float32(dPadLeft)*xScale, float32(dPadTop+50)*yScale))
+		lcd.right.Move(fyne.NewPos(float32(dPadLeft+100)*xScale, float32(dPadTop+50)*yScale))
 	}
 
-	lcd.output.Resize(fyne.NewSize(int(320*xScale), int(296*yScale)))
-	lcd.output.Move(fyne.NewPos(screenXPos, int(54*yScale)))
+	lcd.output.Resize(fyne.NewSize(320*xScale, 296*yScale))
+	lcd.output.Move(fyne.NewPos(screenXPos, 54*yScale))
 }
 
 func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {

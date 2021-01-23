@@ -6,8 +6,8 @@ import (
 	"log"
 	"path/filepath"
 
-	fyneAPI "fyne.io/fyne"
-	"fyne.io/fyne/storage"
+	fyneAPI "fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/storage"
 	"github.com/andydotxyz/fynegameboy/fyne"
 	"github.com/andydotxyz/fynegameboy/gb"
 )
