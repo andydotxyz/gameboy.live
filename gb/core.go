@@ -398,19 +398,21 @@ func (core *Core) initRom(romData []byte, u fyne.URI) {
 	}
 
 	var ramData []byte
-	fileURI := u.String()
-	if fileURI != "" {
-		core.RamURI = storage.NewURI(u.String()[:len(u.String())-3] + ".sav")
+	if u != nil {
+		fileURI := u.String()
+		if fileURI != "" {
+			core.RamURI = storage.NewURI(u.String()[:len(u.String())-3] + ".sav")
 
-		read, err := storage.OpenFileFromURI(core.RamURI)
-		if err != nil {
-			log.Println("Could not create reader for URI", core.RamURI)
-		} else {
-			data, err := ioutil.ReadAll(read) // could ne not there yet
+			read, err := storage.OpenFileFromURI(core.RamURI)
 			if err != nil {
-				log.Println("Could not read from URI", core.RamURI)
+				log.Println("Could not create reader for URI", core.RamURI)
 			} else {
-				ramData = data
+				data, err := ioutil.ReadAll(read) // could ne not there yet
+				if err != nil {
+					log.Println("Could not read from URI", core.RamURI)
+				} else {
+					ramData = data
+				}
 			}
 		}
 	}

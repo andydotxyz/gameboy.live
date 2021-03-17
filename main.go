@@ -59,7 +59,7 @@ func startGUI() {
 	uri := storage.NewURI(fyneAPI.CurrentApp().Preferences().String("RomURI"))
 
 	var data []byte
-	if romPath == "" && uri.String() != "" {
+	if romPath == "" && uri != nil && uri.String() != "" {
 		read, err := storage.OpenFileFromURI(uri)
 		log.Println("err", err)
 		data, err = ioutil.ReadAll(read)
