@@ -8,7 +8,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/internal"
-	"fyne.io/fyne/v2/internal/driver"
+	"fyne.io/fyne/v2/internal/app"
 	"fyne.io/fyne/v2/internal/painter"
 
 	"github.com/go-gl/glfw/v3.3/glfw"
@@ -31,6 +31,9 @@ var drawFuncQueue = make(chan drawData)
 var runFlag = false
 var runMutex = &sync.Mutex{}
 var initOnce = &sync.Once{}
+var donePool = &sync.Pool{New: func() interface{} {
+	return make(chan struct{})
+}}
 
 // Arrange that main.main runs on main thread.
 func init() {
@@ -50,7 +53,8 @@ func runOnMain(f func()) {
 	if !running() {
 		f()
 	} else {
-		done := make(chan struct{})
+		done := donePool.Get().(chan struct{})
+		defer donePool.Put(done)
 
 		funcQueue <- funcData{f: f, done: done}
 		<-done
@@ -59,7 +63,8 @@ func runOnMain(f func()) {
 
 // force a function f to run on the draw thread
 func runOnDraw(w *window, f func()) {
-	done := make(chan struct{})
+	done := donePool.Get().(chan struct{})
+	defer donePool.Put(done)
 
 	drawFuncQueue <- drawData{f: f, win: w, done: done}
 	<-done
@@ -85,13 +90,14 @@ func (d *gLDriver) runGL() {
 	runMutex.Unlock()
 
 	d.initGLFW()
-
+	fyne.CurrentApp().Lifecycle().(*app.Lifecycle).TriggerStarted()
 	for {
 		select {
 		case <-d.done:
 			eventTick.Stop()
 			d.drawDone <- nil // wait for draw thread to stop
 			glfw.Terminate()
+			fyne.CurrentApp().Lifecycle().(*app.Lifecycle).TriggerStopped()
 			return
 		case f := <-funcQueue:
 			f.f()
@@ -113,7 +119,6 @@ func (d *gLDriver) runGL() {
 					w.viewLock.Lock()
 					w.visible = false
 					v := w.viewport
-					w.viewport = nil
 					w.viewLock.Unlock()
 
 					// remove window from window list
@@ -153,12 +158,12 @@ func (d *gLDriver) runGL() {
 func (d *gLDriver) repaintWindow(w *window) {
 	canvas := w.canvas
 	w.RunWithContext(func() {
-		if w.canvas.ensureMinSize() {
+		if w.canvas.EnsureMinSize() {
 			w.viewLock.Lock()
 			w.shouldExpand = true
 			w.viewLock.Unlock()
 		}
-		freeDirtyTextures(canvas)
+		canvas.FreeDirtyTextures()
 
 		updateGLContext(w)
 		canvas.paint(canvas.Size())
@@ -191,20 +196,26 @@ func (d *gLDriver) startDrawThread() {
 				if f.done != nil {
 					f.done <- struct{}{}
 				}
-			case <-settingsChange:
+			case set := <-settingsChange:
 				painter.ClearFontCache()
-				for _, win := range d.windowList() {
-					go win.Canvas().(*glCanvas).reloadScale()
-				}
+				painter.SvgCacheReset()
+				app.ApplySettingsWithCallback(set, fyne.CurrentApp(), func(w fyne.Window) {
+					c, ok := w.Canvas().(*glCanvas)
+					if !ok {
+						return
+					}
+					c.applyThemeOutOfTreeObjects()
+					go c.reloadScale()
+				})
 			case <-draw.C:
 				for _, win := range d.windowList() {
 					w := win.(*window)
 					w.viewLock.RLock()
 					canvas := w.canvas
-					view := w.viewport
+					closing := w.closing
 					visible := w.visible
 					w.viewLock.RUnlock()
-					if view == nil || !canvas.isDirty() || !visible {
+					if closing || !canvas.IsDirty() || !visible {
 						continue
 					}
 
@@ -225,24 +236,9 @@ func (d *gLDriver) tryPollEvents() {
 	glfw.PollEvents() // This call blocks while window is being resized, which prevents freeDirtyTextures from being called
 }
 
-func freeDirtyTextures(canvas *glCanvas) {
-	for {
-		select {
-		case object := <-canvas.refreshQueue:
-			freeWalked := func(obj fyne.CanvasObject, _ fyne.Position, _ fyne.Position, _ fyne.Size) bool {
-				canvas.painter.Free(obj)
-				return false
-			}
-			driver.WalkCompleteObjectTree(object, freeWalked, nil)
-		default:
-			return
-		}
-	}
-}
-
 // refreshWindow requests that the specified window be redrawn
 func refreshWindow(w *window) {
-	w.canvas.setDirty(true)
+	w.canvas.SetDirty(true)
 }
 
 func updateGLContext(w *window) {
@@ -253,6 +249,6 @@ func updateGLContext(w *window) {
 	winWidth := float32(internal.ScaleInt(canvas, size.Width)) * canvas.texScale
 	winHeight := float32(internal.ScaleInt(canvas, size.Height)) * canvas.texScale
 
-	canvas.painter.SetFrameBufferScale(canvas.texScale)
-	w.canvas.painter.SetOutputSize(int(winWidth), int(winHeight))
+	canvas.Painter().SetFrameBufferScale(canvas.texScale)
+	w.canvas.Painter().SetOutputSize(int(winWidth), int(winHeight))
 }

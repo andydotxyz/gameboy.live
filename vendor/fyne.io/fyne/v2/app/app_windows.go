@@ -32,7 +32,7 @@ $toastXml.GetElementsByTagName("text")[1].AppendChild($toastXml.CreateTextNode($
 $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
 $xml.LoadXml($toastXml.OuterXml)
 $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
-[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("appID").Show($toast);`
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("%s").Show($toast);`
 
 func isDark() bool {
 	k, err := registry.OpenKey(registry.CURRENT_USER, `SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize`, registry.QUERY_VALUE)
@@ -63,19 +63,23 @@ func rootConfigDir() string {
 	return filepath.Join(desktopConfig, "fyne")
 }
 
-func (app *fyneApp) OpenURL(url *url.URL) error {
-	cmd := app.exec("rundll32", "url.dll,FileProtocolHandler", url.String())
+func (a *fyneApp) OpenURL(url *url.URL) error {
+	cmd := a.exec("rundll32", "url.dll,FileProtocolHandler", url.String())
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	return cmd.Run()
 }
 
 var scriptNum = 0
 
-func (app *fyneApp) SendNotification(n *fyne.Notification) {
+func (a *fyneApp) SendNotification(n *fyne.Notification) {
 	title := escapeNotificationString(n.Title)
 	content := escapeNotificationString(n.Content)
+	appID := a.UniqueID() // TODO once we have an app name compiled in this could be improved
+	if appID == "" || strings.Index(appID, "missing-id") == 0 {
+		appID = "Fyne app"
+	}
 
-	script := fmt.Sprintf(notificationTemplate, title, content)
+	script := fmt.Sprintf(notificationTemplate, title, content, appID)
 	go runScript("notify", script)
 }
 
