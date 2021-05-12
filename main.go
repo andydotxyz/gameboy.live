@@ -97,6 +97,17 @@ func startGUI() {
 		start()
 	}
 
+	const volumeControlMemoryLocation = 0xFF26
+	d.Pause = func() {
+		core.Pause()
+		core.Sound.Trigger(volumeControlMemoryLocation, 0, core.Memory.MainMemory[0xFF10:0xFF40])
+	}
+	d.Resume = func() {
+		data := core.Memory.MainMemory[volumeControlMemoryLocation]
+		core.Sound.Trigger(volumeControlMemoryLocation, data, core.Memory.MainMemory[0xFF10:0xFF40])
+		core.Resume()
+	}
+
 	d.Run(core.DrawSignal, func() {
 		core.SaveRAM()
 	})

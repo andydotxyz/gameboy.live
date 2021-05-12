@@ -17,6 +17,7 @@ type Core struct {
 	Memory    Memory
 	Sound     Sound
 	cbMap     [0x100](func())
+	ticker    *time.Ticker
 
 	/*
 	   +++++++++++++++++++++++
@@ -123,11 +124,19 @@ func (core *Core) Init(romData []byte, u fyne.URI) {
 	}
 }
 
+func (core *Core) Pause() {
+	core.ticker.Stop()
+}
+
+func (core *Core) Resume() {
+	core.ticker.Reset(time.Second / time.Duration(core.FPS))
+}
+
 // Start the emulation loop
 func (core *Core) Run() {
 	// Execution interval depends on the FPS
-	ticker := time.NewTicker(time.Second / time.Duration(core.FPS))
-	for range ticker.C {
+	core.ticker = time.NewTicker(time.Second / time.Duration(core.FPS))
+	for range core.ticker.C {
 		core.update()
 		// Check controller input interrupt
 		if core.Controller.UpdateInput() {
@@ -139,6 +148,7 @@ func (core *Core) Run() {
 			return
 		}
 	}
+	core.ticker.Stop()
 }
 
 /*

@@ -16,7 +16,9 @@ import (
 
 type LCD struct {
 	Open func(fyne.URIReadCloser)
+	Pause func()
 	Reset func()
+	Resume func()
 	DrawSignal chan bool
 
 	app    fyne.App
@@ -31,6 +33,7 @@ type LCD struct {
 	inputStatus *byte
 	interrupt   bool
 	title       string
+	paused      bool
 }
 
 func NewDriver() *LCD {
@@ -214,6 +217,19 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 	lcd.app.SetIcon(resourceIconPng)
 	win := lcd.app.NewWindow(fmt.Sprintf("GameBoy - %s", lcd.title))
+	lcd.app.Lifecycle().SetOnExitedForeground(func() {
+		if lcd.paused {
+			return
+		}
+		lcd.paused = true
+		lcd.Pause()
+		d := dialog.NewInformation("Paused", "Tap 'OK' to resume", win)
+		d.SetOnClosed(func() {
+			lcd.Resume()
+			lcd.paused = false
+		})
+		d.Show()
+	})
 
 	lcd.DrawSignal = drawSignal
 	lcd.screen = image.NewRGBA(image.Rect(0, 0, 160, 144))
