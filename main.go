@@ -81,7 +81,9 @@ func startGUI() {
 	}
 	start()
 
+	const volumeControlMemoryLocation = 0xFF26
 	d.Reset = func() {
+		core.Sound.Trigger(volumeControlMemoryLocation, 0, core.Memory.MainMemory[0xFF10:0xFF40])
 		core.Exit = true
 		start()
 	}
@@ -94,10 +96,9 @@ func startGUI() {
 		}
 		_ = r.Close()
 		data = bytes
-		start()
+		d.Reset()
 	}
 
-	const volumeControlMemoryLocation = 0xFF26
 	d.Pause = func() {
 		core.Pause()
 		core.Sound.Trigger(volumeControlMemoryLocation, 0, core.Memory.MainMemory[0xFF10:0xFF40])

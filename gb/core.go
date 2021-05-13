@@ -125,10 +125,18 @@ func (core *Core) Init(romData []byte, u fyne.URI) {
 }
 
 func (core *Core) Pause() {
+	if core.ticker == nil {
+		return
+	}
+
 	core.ticker.Stop()
 }
 
 func (core *Core) Resume() {
+	if core.ticker == nil {
+		return
+	}
+
 	core.ticker.Reset(time.Second / time.Duration(core.FPS))
 }
 
