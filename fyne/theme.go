@@ -10,26 +10,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
 )
-
-var _ fyne.Theme = (*gameTheme)(nil)
-
-type gameTheme struct {
-	fyne.Theme
-}
-
-func newGameTheme() fyne.Theme {
-	return &gameTheme{Theme: theme.DefaultTheme()}
-}
-
-func (t *gameTheme) Color(n fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
-	if n == theme.ColorNameBackground {
-		return &color.Gray{Y: 0xbd}
-	}
-
-	return t.Theme.Color(n, v)
-}
 
 type frame struct {
 	output *canvas.Image

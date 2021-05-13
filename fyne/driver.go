@@ -3,6 +3,7 @@ package fyne
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"log"
 
 	"fyne.io/fyne/v2"
@@ -26,6 +27,7 @@ type LCD struct {
 	pixels *[160][144][3]uint8
 	screen *image.RGBA
 
+	bg     *canvas.Rectangle
 	frame  *canvas.Image
 	frame2 fyne.CanvasObject
 
@@ -40,7 +42,6 @@ type LCD struct {
 
 func NewDriver() *LCD {
 	a := app.NewWithID("xyz.andy.gameboy")
-	a.Settings().SetTheme(newGameTheme())
 	a.SetIcon(resourceIconPng)
 	return &LCD{app: a}
 }
@@ -160,6 +161,7 @@ func (lcd *LCD) MinSize([]fyne.CanvasObject) fyne.Size {
 }
 
 func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
+	lcd.bg.Resize(size)
 	lcd.frame.Resize(size)
 
 	frameSpacePos := fyne.NewPos(0, 0)
@@ -296,7 +298,8 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 		lcd.right.Hide()
 	}
 
-	content := container.New(lcd, lcd.frame, lcd.frame2,
+	lcd.bg = canvas.NewRectangle(&color.Gray{Y: 0xbd})
+	content := container.New(lcd, lcd.bg, lcd.frame, lcd.frame2,
 		lcd.a, lcd.b, lcd.start, lcd.sel, lcd.up, lcd.down, lcd.left, lcd.right)
 
 	win.SetPadded(false)
