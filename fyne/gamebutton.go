@@ -1,8 +1,6 @@
 package fyne
 
 import (
-	"image/color"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/driver/mobile"
 	"fyne.io/fyne/v2/widget"
@@ -12,6 +10,7 @@ type gameButton struct {
 	widget.BaseWidget
 	buttonCode uint
 	lcd        *LCD
+	bg         fyne.CanvasObject
 }
 
 func (g *gameButton) TouchDown(*mobile.TouchEvent) {
@@ -27,20 +26,22 @@ func (g *gameButton) TouchCancel(*mobile.TouchEvent) {
 }
 
 func (g *gameButton) CreateRenderer() fyne.WidgetRenderer {
-	return &gameButtonRenderer{}
+	return &gameButtonRenderer{objects: []fyne.CanvasObject{g.bg}}
 }
 
-func newGameButton(lcd *LCD, code uint) *gameButton {
-	b := &gameButton{lcd: lcd, buttonCode: code}
+func newGameButton(lcd *LCD, code uint, obj fyne.CanvasObject) *gameButton {
+	b := &gameButton{lcd: lcd, buttonCode: code, bg: obj}
 	b.ExtendBaseWidget(b)
 
 	return b
 }
 
 type gameButtonRenderer struct {
+	objects []fyne.CanvasObject
 }
 
-func (r *gameButtonRenderer) Layout(fyne.Size) {
+func (r *gameButtonRenderer) Layout(s fyne.Size) {
+	r.objects[0].Resize(s)
 }
 
 func (r *gameButtonRenderer) MinSize() fyne.Size {
@@ -51,12 +52,8 @@ func (r *gameButtonRenderer) Refresh() {
 }
 
 func (r *gameButtonRenderer) Objects() []fyne.CanvasObject {
-	return nil
+	return r.objects
 }
 
 func (r *gameButtonRenderer) Destroy() {
-}
-
-func (r *gameButtonRenderer) BackgroundColor() color.Color {
-	return color.Transparent
 }

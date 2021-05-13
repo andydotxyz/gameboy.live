@@ -27,12 +27,9 @@ type LCD struct {
 	pixels *[160][144][3]uint8
 	screen *image.RGBA
 
-	bg     *canvas.Rectangle
-	frame  *canvas.Image
-	frame2 fyne.CanvasObject
-
-	up, down, left, right fyne.CanvasObject
-	start, sel, a, b      fyne.CanvasObject
+	bg      *canvas.Rectangle
+	buttons fyne.CanvasObject
+	frame   fyne.CanvasObject
 
 	inputStatus *byte
 	interrupt   bool
@@ -162,29 +159,27 @@ func (lcd *LCD) MinSize([]fyne.CanvasObject) fyne.Size {
 
 func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 	lcd.bg.Resize(size)
-	lcd.frame.Resize(size)
 
 	frameSpacePos := fyne.NewPos(0, 0)
 	frameSpaceSize := size
-
-	xScale := float32(size.Width) / 520.0
-	yScale := float32(size.Height) / 400.0
 	if fyne.CurrentDevice().IsMobile() {
+		buttonSpacePos := fyne.NewPos(0, 0)
+		buttonSpaceSize := size
 		if fyne.IsHorizontal(fyne.CurrentDevice().Orientation()) {
 			oldWidth := frameSpaceSize.Width
-			frameSpaceSize.Width *= float32(130)/200
+			frameSpaceSize.Width *= 0.7
 			frameSpacePos.X = (oldWidth - frameSpaceSize.Width) / 2
-			lcd.frame.Resource = resourceFramemobilelandscapeSvg
-			xScale = float32(size.Width) / 800.0
 		} else {
 			frameSpaceSize.Height /= 2
-			lcd.frame.Resource = resourceFramemobileSvg
-			yScale = float32(size.Height) / 800.0
+			buttonSpaceSize.Height = size.Height - frameSpaceSize.Height
+			buttonSpacePos.Y = size.Height - buttonSpaceSize.Height
 		}
-		lcd.frame.Refresh()
-	}
-	frameSpaceRatio := frameSpaceSize.Width / frameSpaceSize.Height
 
+		lcd.buttons.Move(buttonSpacePos)
+		lcd.buttons.Resize(buttonSpaceSize)
+	}
+
+	frameSpaceRatio := frameSpaceSize.Width / frameSpaceSize.Height
 	frameRatio := float32(1.3)
 	frameSize := frameSpaceSize
 	framePos := frameSpacePos
@@ -196,46 +191,8 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 		framePos = frameSpacePos.Add(fyne.NewPos(0, (frameSpaceSize.Height - frameSize.Height) / 2))
 	}
 
-	lcd.frame2.Move(framePos)
-	lcd.frame2.Resize(frameSize)
-
-	abSize := fyne.NewSize(70*xScale, 70*yScale)
-	startSize := fyne.NewSize(90*xScale, 20*yScale)
-	dSize := fyne.NewSize(50*xScale, 50*yScale)
-
-	lcd.a.Resize(abSize)
-	lcd.b.Resize(abSize)
-	lcd.start.Resize(startSize)
-	lcd.sel.Resize(startSize)
-
-	lcd.up.Resize(dSize)
-	lcd.down.Resize(dSize)
-	lcd.left.Resize(dSize)
-	lcd.right.Resize(dSize)
-
-	if fyne.CurrentDevice().IsMobile() {
-		dPadTop, dPadLeft := 505, 18
-		if fyne.IsHorizontal(fyne.CurrentDevice().Orientation()) {
-			dPadTop, dPadLeft = 105, 2
-
-			lcd.a.Move(fyne.NewPos(728*xScale, 76*yScale))
-			lcd.b.Move(fyne.NewPos(659*xScale, 137*yScale))
-
-			lcd.start.Move(fyne.NewPos(715*xScale, 280*yScale))
-			lcd.sel.Move(fyne.NewPos(650*xScale, 320*yScale))
-		} else {
-			lcd.a.Move(fyne.NewPos(425*xScale, 516*yScale))
-			lcd.b.Move(fyne.NewPos(328*xScale, 565*yScale))
-
-			lcd.start.Move(fyne.NewPos(230*xScale, 725*yScale))
-			lcd.sel.Move(fyne.NewPos(135*xScale, 725*yScale))
-		}
-
-		lcd.up.Move(fyne.NewPos(float32(dPadLeft+50)*xScale, float32(dPadTop)*yScale))
-		lcd.down.Move(fyne.NewPos(float32(dPadLeft+50)*xScale, float32(dPadTop+100)*yScale))
-		lcd.left.Move(fyne.NewPos(float32(dPadLeft)*xScale, float32(dPadTop+50)*yScale))
-		lcd.right.Move(fyne.NewPos(float32(dPadLeft+100)*xScale, float32(dPadTop+50)*yScale))
-	}
+	lcd.frame.Move(framePos)
+	lcd.frame.Resize(frameSize)
 }
 
 func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
@@ -269,38 +226,17 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 		}
 	}()
 
-	if lcd.app.Driver().Device().IsMobile() {
-		lcd.frame = canvas.NewImageFromResource(resourceFramemobileSvg)
-	} else {
-		lcd.frame = canvas.NewImageFromResource(nil)
-	}
 	frame := newFrame(output)
-	lcd.frame2 = frame.makeUI()
-	lcd.up = newGameButton(lcd, 2)
-	lcd.down = newGameButton(lcd, 3)
-	lcd.left = newGameButton(lcd, 1)
-	lcd.right = newGameButton(lcd, 0)
-
-	lcd.a = newGameButton(lcd, 4)
-	lcd.b = newGameButton(lcd, 5)
-	lcd.start = newGameButton(lcd, 7)
-	lcd.sel = newGameButton(lcd, 6)
-
-	if !lcd.app.Driver().Device().IsMobile() {
-		lcd.a.Hide()
-		lcd.b.Hide()
-		lcd.start.Hide()
-		lcd.sel.Hide()
-
-		lcd.up.Hide()
-		lcd.down.Hide()
-		lcd.left.Hide()
-		lcd.right.Hide()
-	}
+	lcd.frame = frame.makeUI()
 
 	lcd.bg = canvas.NewRectangle(&color.Gray{Y: 0xbd})
-	content := container.New(lcd, lcd.bg, lcd.frame, lcd.frame2,
-		lcd.a, lcd.b, lcd.start, lcd.sel, lcd.up, lcd.down, lcd.left, lcd.right)
+	objects := []fyne.CanvasObject{lcd.bg, lcd.frame}
+	if fyne.CurrentDevice().IsMobile() {
+		buttons := newButtons(lcd)
+		lcd.buttons = buttons.makeUI()
+		objects = append(objects, lcd.buttons)
+	}
+	content := container.New(lcd, objects...)
 
 	win.SetPadded(false)
 	win.SetContent(content)
@@ -308,6 +244,10 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 		deskCanvas.SetOnKeyDown(lcd.buttonDown)
 		deskCanvas.SetOnKeyUp(lcd.buttonUp)
 	}
+	if !fyne.CurrentDevice().IsMobile() {
+		win.Resize(fyne.NewSize(520, 400))
+	}
+
 	win.SetOnClosed(func() {
 		onQuit()
 		lcd.app.Quit()
