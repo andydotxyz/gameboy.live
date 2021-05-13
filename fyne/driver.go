@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/driver/desktop"
+	"fyne.io/fyne/v2/storage"
 
 	"github.com/andydotxyz/fynegameboy/util"
 )
@@ -266,7 +267,9 @@ func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
 				lcd.app.Preferences().SetString("RomURI", u.URI().String())
 				lcd.Open(u)
 			}, win)
-//			open.SetFilter(storage.NewExtensionFileFilter([]string{".gb"}))
+			if !fyne.CurrentDevice().IsMobile() {
+				open.SetFilter(storage.NewExtensionFileFilter([]string{".gb"}))
+			}
 			open.Show()
 		}),
 		fyne.NewMenuItem("Reset...", func() {
