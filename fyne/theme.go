@@ -12,8 +12,8 @@ import (
 )
 
 type buttons struct {
-	up, down, left, right fyne.CanvasObject
-	start, sel, a, b      fyne.CanvasObject
+	up, down, left, right, middle fyne.CanvasObject
+	start, sel, a, b              fyne.CanvasObject
 }
 
 func newButtons(lcd *LCD) *buttons {
@@ -21,23 +21,24 @@ func newButtons(lcd *LCD) *buttons {
 	down := newGameButton(lcd, 3, canvas.NewRectangle(color.Black))
 	left := newGameButton(lcd, 1, canvas.NewRectangle(color.Black))
 	right := newGameButton(lcd, 0, canvas.NewRectangle(color.Black))
+	mid := canvas.NewCircle(color.Gray{Y: 0x16})
+	mid.StrokeColor = color.Black
+	mid.StrokeWidth = 16
 
 	a := newGameButton(lcd, 4, canvas.NewCircle(color.NRGBA{R: 0xc9, G: 0x20, B: 0x90, A: 0xFF}))
 	b := newGameButton(lcd, 5, canvas.NewCircle(color.NRGBA{R: 0xc9, G: 0x20, B: 0x90, A: 0xFF}))
-	start := newGameButton(lcd, 7, canvas.NewRectangle(color.NRGBA{R: 0x66, G: 0x66, B: 0x66, A: 0xFF}))
-	sel := newGameButton(lcd, 6, canvas.NewRectangle(color.NRGBA{R: 0x66, G: 0x66, B: 0x66, A: 0xFF}))
+	start := newGameButton(lcd, 7, startShape())
+	sel := newGameButton(lcd, 6, startShape())
 
-	return &buttons{up: up, down: down, left: left, right: right, a: a, b: b, start: start, sel: sel}
+	return &buttons{up: up, down: down, left: left, right: right, middle: mid, a: a, b: b, start: start, sel: sel}
 }
 
 
 func (b *buttons) Layout(_ []fyne.CanvasObject, s fyne.Size) {
-	xScale := float32(s.Width) / 130.0
-	yScale := float32(s.Height) / 100.0
-	scale := float32(math.Min(float64(xScale), float64(yScale)))
+	scale := float32(math.Min(float64(s.Width / 130.0), float64(s.Height / 100.0)))
 
 	abSize := fyne.NewSize(17.5*scale, 17.5*scale)
-	startSize := fyne.NewSize(22.5*scale, 5*scale)
+	startSize := fyne.NewSize(21*scale, 5*scale)
 	dSize := fyne.NewSize(12.5*scale, 12.5*scale)
 
 	b.a.Resize(abSize)
@@ -49,6 +50,7 @@ func (b *buttons) Layout(_ []fyne.CanvasObject, s fyne.Size) {
 	b.down.Resize(dSize)
 	b.left.Resize(dSize)
 	b.right.Resize(dSize)
+	b.middle.Resize(fyne.NewSize(16*scale, 16*scale))
 
 	dPadTop, dPadLeft := float32(26.25), float32(4.5)
 	if fyne.IsHorizontal(fyne.CurrentDevice().Orientation()) {
@@ -74,10 +76,11 @@ func (b *buttons) Layout(_ []fyne.CanvasObject, s fyne.Size) {
 		dPadTop += yOff
 	}
 
-	b.up.Move(fyne.NewPos(float32(dPadLeft+12.5)*scale, float32(dPadTop)*yScale))
+	b.up.Move(fyne.NewPos(float32(dPadLeft+12.5)*scale, float32(dPadTop)*scale))
 	b.down.Move(fyne.NewPos(float32(dPadLeft+12.5)*scale, float32(dPadTop+25)*scale))
 	b.left.Move(fyne.NewPos(float32(dPadLeft)*scale, float32(dPadTop+12.5)*scale))
 	b.right.Move(fyne.NewPos(float32(dPadLeft+25)*scale, float32(dPadTop+12.5)*scale))
+	b.middle.Move(fyne.NewPos(float32(dPadLeft+10.75)*scale, float32(dPadTop+10.75)*scale))
 }
 
 func (b *buttons) MinSize(objects []fyne.CanvasObject) fyne.Size {
@@ -85,7 +88,7 @@ func (b *buttons) MinSize(objects []fyne.CanvasObject) fyne.Size {
 }
 
 func (b *buttons) makeUI() fyne.CanvasObject {
-	return container.New(b, b.up, b.down, b.left, b.right, b.a, b.b, b.start, b.sel)
+	return container.New(b, b.up, b.down, b.left, b.right, b.middle, b.a, b.b, b.start, b.sel)
 }
 
 type frame struct {
@@ -144,4 +147,31 @@ func (f *frame) makeUI() fyne.CanvasObject {
 	f.b3 = canvas.NewRectangle(frameCol)
 	f.b4 = canvas.NewRectangle(frameCol)
 	return container.New(f, f.tl, f.tr, f.bl, f.br, f.b1, f.b2, f.b3, f.b4, f.output, f.power)
+}
+
+type curvedBox struct {
+	left, right *canvas.Circle
+	mid         *canvas.Rectangle
+}
+
+func (c *curvedBox) Layout(_ []fyne.CanvasObject, s fyne.Size) {
+	h := s.Height
+	c.left.Resize(fyne.NewSize(h, h))
+	c.right.Resize(fyne.NewSize(h, h))
+	c.mid.Resize(fyne.NewSize(s.Width - h, h))
+
+	c.right.Move(fyne.NewPos(s.Width - h, 0))
+	c.mid.Move(fyne.NewPos(h/2, 0))
+}
+
+func (c *curvedBox) MinSize(objects []fyne.CanvasObject) fyne.Size {
+	return fyne.NewSize(5, 5)
+}
+
+func startShape() fyne.CanvasObject {
+	btnCol := color.NRGBA{R: 0x66, G: 0x66, B: 0x66, A: 0xFF}
+	left := canvas.NewCircle(btnCol)
+	right := canvas.NewCircle(btnCol)
+	mid := canvas.NewRectangle(btnCol)
+	return container.New(&curvedBox{left, right, mid}, left, right, mid)
 }
