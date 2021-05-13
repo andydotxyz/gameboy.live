@@ -37,7 +37,10 @@ type LCD struct {
 }
 
 func NewDriver() *LCD {
-	return &LCD{app: app.NewWithID("xyz.andy.gameboy")}
+	a := app.NewWithID("xyz.andy.gameboy")
+	a.Settings().SetTheme(newGameTheme())
+	a.SetIcon(resourceIconPng)
+	return &LCD{app: a}
 }
 
 func (lcd *LCD) Init(pixels *[160][144][3]uint8, title string) {
@@ -215,7 +218,6 @@ func (lcd *LCD) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 }
 
 func (lcd *LCD) Run(drawSignal chan bool, onQuit func()) {
-	lcd.app.SetIcon(resourceIconPng)
 	win := lcd.app.NewWindow(fmt.Sprintf("GameBoy - %s", lcd.title))
 	lcd.app.Lifecycle().SetOnExitedForeground(func() {
 		if lcd.paused {
